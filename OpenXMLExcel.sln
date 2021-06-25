@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31402.337
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExcelAppOpenXML", "WebApplication1\ExcelAppOpenXML.csproj", "{57831DA8-A186-421A-AF23-226072D9B2A3}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{57831DA8-A186-421A-AF23-226072D9B2A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57831DA8-A186-421A-AF23-226072D9B2A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57831DA8-A186-421A-AF23-226072D9B2A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57831DA8-A186-421A-AF23-226072D9B2A3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A4022A15-560D-4E4B-B302-C792987E2BB1}
+	EndGlobalSection
+EndGlobal

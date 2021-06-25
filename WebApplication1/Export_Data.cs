@@ -1,0 +1,438 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.IO;
+using System.Linq;
+using System.Web;
+using DocumentFormat.OpenXml;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using X14 = DocumentFormat.OpenXml.Office2010.Excel;
+using X15 = DocumentFormat.OpenXml.Office2013.Excel;
+
+namespace ExcelAppOpenXML
+{
+    public class Export_Data
+    {
+        public static readonly string date = DateTime.UtcNow.ToLongDateString();
+        public static string filePath = _Default.DesPath;
+
+        public static void WriteToExcel()
+        {
+            DataTable dt = GetDataFromAPI.dataTable2;
+            File.Copy(_Default.SourcePath, filePath, true);
+            int columnLen1 = 0, columnLen2 = 0, columnLen3 = 0;
+
+            using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
+            {
+                WorksheetPart worksheetPart1 = GetWorksheetPartByName(spreadSheet, "Database & Connectivity");
+                WorksheetPart worksheetPart2 = GetWorksheetPartByName(spreadSheet, "Power Systems");
+                WorksheetPart worksheetPart3 = GetWorksheetPartByName(spreadSheet, "Z Systems");
+
+                #region Populate & Merge
+                foreach (DataRow item in dt.Rows)
+                {
+                    int sheetNum = int.Parse(item[1].ToString());
+                    uint rows = uint.Parse(item[dt.Columns.Count - 1].ToString());
+                    int columns = int.Parse(item[dt.Columns.Count - 2].ToString());
+                    string cellData = item[dt.Columns.Count - 3].ToString();
+                    string cellDataLevel2 = item[dt.Columns.Count - 8].ToString();
+                    string cellDataLevel3 = item[dt.Columns.Count - 7].ToString();
+                    string cellDataLevel4 = item[dt.Columns.Count - 6].ToString();
+
+                    if (sheetNum == 1)
+                    {
+                        InsertTextExistingExcel(spreadSheet, worksheetPart1, columns, rows, cellData, false);
+                        InsertTextExistingExcel(spreadSheet, worksheetPart1, columns, 5, cellDataLevel2, false);
+                        InsertTextExistingExcel(spreadSheet, worksheetPart1, columns, 6, cellDataLevel3, false);
+                        InsertTextExistingExcel(spreadSheet, worksheetPart1, columns, 7, cellDataLevel4, false);
+                        columnLen1 = columns;
+                    }
+                    else if (sheetNum == 2)
+                    {
+                        InsertTextExistingExcel(spreadSheet, worksheetPart2, columns, rows, cellData, false);
+                        InsertTextExistingExcel(spreadSheet, worksheetPart2, columns, 5, cellDataLevel2, false);
+                        InsertTextExistingExcel(spreadSheet, worksheetPart2, columns, 6, cellDataLevel3, false);
+                        InsertTextExistingExcel(spreadSheet, worksheetPart2, columns, 7, cellDataLevel4, false);
+                        columnLen2 = columns;
+                    }
+                    else if (sheetNum == 3)
+                    {
+                        InsertTextExistingExcel(spreadSheet, worksheetPart3, columns, rows, cellData, false);
+                        InsertTextExistingExcel(spreadSheet, worksheetPart3, columns, 5, cellDataLevel2, false);
+                        InsertTextExistingExcel(spreadSheet, worksheetPart3, columns, 6, cellDataLevel3, false);
+                        InsertTextExistingExcel(spreadSheet, worksheetPart3, columns, 7, cellDataLevel4, false);
+                        columnLen3 = columns;
+                    }
+                }
+
+                MergeSheetData(spreadSheet, worksheetPart1, columnLen1, 2, 2);
+                MergeSheetData(spreadSheet, worksheetPart2, columnLen2, 2, 2);
+                MergeSheetData(spreadSheet, worksheetPart3, columnLen3, 2, 2);
+                #endregion
+            }
+
+            WriteToExcel1();
+        }
+
+        private static void WriteToExcel1()
+        {
+            DataTable dt = GetDataFromAPI.dataTable1;
+            int rowSource, rowDestination, column, i, j;
+
+            using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
+            {
+                WorksheetPart worksheetPart1 = GetWorksheetPartByName(spreadSheet, "Hierarchy");
+                Worksheet worksheet = worksheetPart1.Worksheet;
+
+                #region Populate
+                for (i = 0; i <= dt.Rows.Count - 1; i++)
+                {
+                    for (j = 0; j <= dt.Columns.Count - 2; j += 2)
+                    {
+                        uint row = uint.Parse(dt.Rows[i].ItemArray[dt.Columns.Count - 1].ToString());
+                        int columns = int.Parse(dt.Rows[i].ItemArray[j + 1].ToString());
+
+                        string cellData = dt.Rows[i].ItemArray[j].ToString();
+                        InsertTextExistingExcel(spreadSheet, worksheetPart1, columns, row, cellData, true);
+                    }
+                }
+                #endregion
+
+                #region Merge
+                for (i = 0; i < (dt.Columns.Count / 2) - 1; i += 2)
+                {
+                    j = 0;
+                    rowSource = int.Parse(dt.Rows[j].ItemArray[dt.Columns.Count - 1].ToString());
+                    column = int.Parse(dt.Rows[j].ItemArray[i + 1].ToString());
+                    rowDestination = rowSource;
+
+                    for (j = 0; j < dt.Rows.Count; j++)
+                    {
+                        if (j == dt.Rows.Count - 1)
+                        {
+                            rowDestination = int.Parse(dt.Rows[j].ItemArray[dt.Columns.Count - 1].ToString());
+                            if (i == 0)
+                            {
+                                int colSrc = int.Parse(dt.Rows[j].ItemArray[dt.Columns.Count - 8].ToString());
+                                uint colDes = uint.Parse(dt.Rows[j].ItemArray[dt.Columns.Count - 2].ToString());
+                                for (int col = colSrc; col <= colDes; col++)
+                                {
+                                    for (uint row = 6; row <= rowDestination; row++)
+                                    {
+                                        StylesSheet1.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(col - 1), row), col == colSrc, false, false, false);
+                                    }
+                                }
+                            }
+                            if (GetRowNumber(column) == 1 && rowDestination > 22) 
+                            {
+                                for (uint val = 23; val <= rowDestination; val++)
+                                {
+                                    DeleteTextFromCell(worksheetPart1, ColumnLetter(column - 1), val);
+                                }
+                                rowDestination = 22;
+                            }
+                            Merge(worksheet, ColumnLetter(column - 1) + rowSource, ColumnLetter(column - 1) + rowDestination);
+                            StylesSheet1.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(column - 1), (uint)rowSource), false, GetRowNumber(column) == 3, GetRowNumber(column) == 2, GetRowNumber(column) == 1);
+                        }
+                        else if (dt.Rows[j].ItemArray[i].ToString() == dt.Rows[j + 1].ItemArray[i].ToString())
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            rowDestination = int.Parse(dt.Rows[j].ItemArray[dt.Columns.Count - 1].ToString());
+                            if (i == 0)
+                            {
+                                int colSrc = int.Parse(dt.Rows[j].ItemArray[dt.Columns.Count - 8].ToString());
+                                uint colDes = uint.Parse(dt.Rows[j].ItemArray[dt.Columns.Count - 2].ToString());
+                                for (int col = colSrc; col <= colDes; col++)
+                                {
+                                    for (uint row = 6; row <= rowDestination; row++)
+                                    {
+                                        StylesSheet1.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(col - 1), row), col == colSrc, false, false, false);
+                                    }
+                                }
+                            }
+                            if (GetRowNumber(column) == 1 && rowDestination > 22)
+                            {
+                                for (uint val = 23; val <= rowDestination; val++)
+                                {
+                                    DeleteTextFromCell(worksheetPart1, ColumnLetter(column - 1), val);
+                                }
+                                rowDestination = 22;
+                            }
+                            Merge(worksheet, ColumnLetter(column - 1) + rowSource, ColumnLetter(column - 1) + rowDestination);
+                            StylesSheet1.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(column - 1), (uint)rowSource), false, GetRowNumber(column) == 3, GetRowNumber(column) == 2, GetRowNumber(column) == 1);
+                            rowSource = int.Parse(dt.Rows[j + 1].ItemArray[dt.Columns.Count - 1].ToString());
+                            column = int.Parse(dt.Rows[j + 1].ItemArray[i + 1].ToString());
+                        }
+                    }
+                }
+                #endregion
+            }
+        }
+
+        public static void DeleteTextFromCell(WorksheetPart worksheetPart, string colName, uint rowIndex)
+        {
+            Cell cell = GetSpreadsheetCell(worksheetPart.Worksheet, colName, rowIndex);
+            cell.Remove();
+            worksheetPart.Worksheet.Save();
+        }
+
+        private static int GetRowNumber(int i)
+        {
+            if (i == 3 || i == 12 || i == 21)
+            {
+                return 3;
+            }
+            else if (i == 2 || i == 11 || i == 20)
+            {
+                return 2;
+            }
+            else if (i == 1 || i == 10 || i == 19)
+            {
+                return 1;
+            }
+            else
+            {
+                return 1;
+            }
+        }
+
+        public static void Merge(Worksheet worksheet, string cell1Name, string cell2Name)
+        {
+            MergeCells mergeCells;
+
+            if (worksheet.Elements<MergeCells>().Count() > 0)
+            {
+                mergeCells = worksheet.Elements<MergeCells>().First();
+            }
+            else
+
+            {
+
+                mergeCells = new MergeCells();
+
+                // Insert a MergeCells object into the specified position.
+
+                if (worksheet.Elements<CustomSheetView>().Count() > 0)
+
+                {
+
+                    worksheet.InsertAfter(mergeCells, worksheet.Elements<CustomSheetView>().First());
+
+                }
+
+                else if (worksheet.Elements<DataConsolidate>().Count() > 0)
+
+                {
+
+                    worksheet.InsertAfter(mergeCells, worksheet.Elements<DataConsolidate>().First());
+
+                }
+
+                else if (worksheet.Elements<SortState>().Count() > 0)
+
+                {
+
+                    worksheet.InsertAfter(mergeCells, worksheet.Elements<SortState>().First());
+
+                }
+
+                else if (worksheet.Elements<AutoFilter>().Count() > 0)
+
+                {
+
+                    worksheet.InsertAfter(mergeCells, worksheet.Elements<AutoFilter>().First());
+
+                }
+
+                else if (worksheet.Elements<Scenarios>().Count() > 0)
+
+                {
+
+                    worksheet.InsertAfter(mergeCells, worksheet.Elements<Scenarios>().First());
+
+                }
+
+                else if (worksheet.Elements<ProtectedRanges>().Count() > 0)
+
+                {
+
+                    worksheet.InsertAfter(mergeCells, worksheet.Elements<ProtectedRanges>().First());
+
+                }
+
+                else if (worksheet.Elements<SheetProtection>().Count() > 0)
+
+                {
+
+                    worksheet.InsertAfter(mergeCells, worksheet.Elements<SheetProtection>().First());
+
+                }
+
+                else if (worksheet.Elements<SheetCalculationProperties>().Count() > 0)
+
+                {
+
+                    worksheet.InsertAfter(mergeCells, worksheet.Elements<SheetCalculationProperties>().First());
+
+                }
+
+                else
+
+                {
+
+                    worksheet.InsertAfter(mergeCells, worksheet.Elements<SheetData>().First());
+
+                }
+
+            }
+
+            MergeCell mergeCell = new MergeCell() { Reference = new StringValue(cell1Name + ":" + cell2Name) };
+            mergeCells.Append(mergeCell);
+            worksheet.Save();
+        }
+
+        private static void MergeSheetData(SpreadsheetDocument spreadSheet, WorksheetPart worksheetPart, int columnLen, int column1SrcLevel3, int columnSrcLevel2)
+        {
+            Worksheet worksheet = worksheetPart.Worksheet;
+            MergeCells mergeCells = new MergeCells();
+            string str;
+            for (int i = 2; i < columnLen + 1; i++)
+            {
+                if (GetSpreadsheetCell(worksheet, ColumnLetter(i), 6) == null)
+                {
+                    int columnDestLevel3 = i;
+                    str = ColumnLetter(column1SrcLevel3 - 1) + "6" + ":" + ColumnLetter(columnDestLevel3 - 1) + "6";
+                    mergeCells.Append(new MergeCell() { Reference = new StringValue(str) });
+                    StylesSheet2.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(column1SrcLevel3 - 1), 6), 6);
+                    column1SrcLevel3 = columnDestLevel3 + 1;
+                }
+                else if (GetSpreadsheetCell(worksheet, ColumnLetter(i - 1), 6).InnerText == GetSpreadsheetCell(worksheet, ColumnLetter(i), 6).InnerText)
+                {
+                    continue;
+                }
+                else
+                {
+                    int columnDestLevel3 = i;
+                    str = ColumnLetter(column1SrcLevel3 - 1) + "6" + ":" + ColumnLetter(columnDestLevel3 - 1) + "6";
+                    mergeCells.Append(new MergeCell() { Reference = new StringValue(str) });
+                    StylesSheet2.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(column1SrcLevel3 - 1), 6), 6);
+                    column1SrcLevel3 = columnDestLevel3 + 1;
+                }
+            }
+            for (int i = 2; i < columnLen + 1; i++)
+            {
+                if (GetSpreadsheetCell(worksheet, ColumnLetter(i), 5) == null)
+                {
+                    int columnDestLevel2 = i;
+                    str = ColumnLetter(columnSrcLevel2 - 1) + "5" + ":" + ColumnLetter(columnDestLevel2 - 1) + "5";
+                    mergeCells.Append(new MergeCell() { Reference = new StringValue(str) });
+                    StylesSheet2.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(columnSrcLevel2 - 1), 5), 5);
+                    columnSrcLevel2 = columnDestLevel2 + 1;
+                }
+                else if (GetSpreadsheetCell(worksheet, ColumnLetter(i - 1), 5).InnerText == GetSpreadsheetCell(worksheet, ColumnLetter(i), 5).InnerText)
+                {
+                    continue;
+                }
+                else
+                {
+                    int columnDestLevel2 = i;
+                    str = ColumnLetter(columnSrcLevel2 - 1) + "5" + ":" + ColumnLetter(columnDestLevel2 - 1) + "5";
+                    mergeCells.Append(new MergeCell() { Reference = new StringValue(str) });
+                    StylesSheet2.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(columnSrcLevel2 - 1), 5), 5);
+                    columnSrcLevel2 = columnDestLevel2 + 1;
+                }
+            }
+
+            str = ColumnLetter(1) + "4" + ":" + ColumnLetter(columnSrcLevel2 - 2) + "4";
+            mergeCells.Append(new MergeCell() { Reference = new StringValue(str) });
+            StylesSheet2.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(1), 4), 4);
+
+            worksheet.InsertAfter(mergeCells, worksheet.Elements<SheetData>().First());
+            worksheet.Save();
+        }
+
+        public static Cell GetSpreadsheetCell(Worksheet worksheet, string columnName, uint rowIndex)
+        {
+            IEnumerable<Row> rows = worksheet.GetFirstChild<SheetData>().Elements<Row>().Where(r => r.RowIndex == rowIndex);
+            if (rows.Count() == 0)
+            {
+                // A cell does not exist at the specified row.
+                return null;
+            }
+
+            IEnumerable<Cell> cells = rows.First().Elements<Cell>().Where(c => string.Compare(c.CellReference.Value, columnName + rowIndex, true) == 0);
+            if (cells.Count() == 0)
+            {
+                // A cell does not exist at the specified column, in the specified row.
+                return null;
+            }
+
+            return cells.First();
+        }
+
+        public static void InsertTextExistingExcel(SpreadsheetDocument spreadSheet, WorksheetPart worksheetPart, int columns, uint rows, string cellData, bool isPage1)
+        {
+            Cell cell = InsertCellInWorksheet(ColumnLetter(columns - 1), rows, worksheetPart);
+            if (rows == 7 && !isPage1)
+            {
+                StylesSheet2.AddBold(spreadSheet, cell, 7);
+            }
+            cell.CellValue = new CellValue(cellData);
+            cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
+            worksheetPart.Worksheet.Save();
+        }
+
+        private static Cell InsertCellInWorksheet(string columnName, uint rowIndex, WorksheetPart worksheetPart)
+        {
+            Worksheet worksheet = worksheetPart.Worksheet;
+            SheetData sheetData = worksheet.GetFirstChild<SheetData>();
+            string cellReference = columnName + rowIndex;
+
+            Row row;
+            if (sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).Count() != 0)
+            {
+                row = sheetData.Elements<Row>().Where(r => r.RowIndex == rowIndex).First();
+            }
+            else
+            {
+                row = new Row() { RowIndex = rowIndex };
+                sheetData.Append(row);
+            }
+            Cell refCell = row.Descendants<Cell>().LastOrDefault();
+            Cell newCell = new Cell() { CellReference = cellReference };
+            row.InsertAfter(newCell, refCell);
+            worksheet.Save();
+            return newCell;
+        }
+
+        public static WorksheetPart GetWorksheetPartByName(SpreadsheetDocument document, string sheetName)
+        {
+            IEnumerable<Sheet> sheets = document.WorkbookPart.Workbook.GetFirstChild<Sheets>().
+                            Elements<Sheet>().Where(s => s.Name == sheetName);
+            if (sheets.Count() == 0)
+            {
+                return null;
+            }
+            string relationshipId = sheets.First().Id.Value;
+            WorksheetPart worksheetPart = (WorksheetPart)document.WorkbookPart.GetPartById(relationshipId);
+            return worksheetPart;
+        }
+
+        private static string ColumnLetter(int intCol)
+        {
+            var intFirstLetter = ((intCol) / 676) + 64;
+            var intSecondLetter = ((intCol % 676) / 26) + 64;
+            var intThirdLetter = (intCol % 26) + 65;
+
+            var firstLetter = (intFirstLetter > 64) ? (char)intFirstLetter : ' ';
+            var secondLetter = (intSecondLetter > 64) ? (char)intSecondLetter : ' ';
+            var thirdLetter = (char)intThirdLetter;
+
+            return string.Concat(firstLetter, secondLetter, thirdLetter).Trim();
+        }
+    }
+}
