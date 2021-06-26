@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Web;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
@@ -14,7 +15,7 @@ namespace ExcelAppOpenXML
 {
     public class Export_Data
     {
-        public static readonly string date = DateTime.UtcNow.ToLongDateString();
+        public static readonly string date = DateTime.Now.ToString("yyyy-MM-dd");
         public static string filePath = _Default.DesPath;
 
         public static void WriteToExcel()
@@ -79,6 +80,7 @@ namespace ExcelAppOpenXML
         {
             DataTable dt = GetDataFromAPI.dataTable1;
             int rowSource, rowDestination, column, i, j;
+            Hyperlinks hyperlinks1 = new Hyperlinks();
 
             using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
             {
@@ -99,7 +101,7 @@ namespace ExcelAppOpenXML
                 }
                 #endregion
 
-                #region Merge
+                #region Merge and Format
                 for (i = 0; i < (dt.Columns.Count / 2) - 1; i += 2)
                 {
                     j = 0;
@@ -121,10 +123,14 @@ namespace ExcelAppOpenXML
                                     for (uint row = 6; row <= rowDestination; row++)
                                     {
                                         StylesSheet1.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(col - 1), row), col == colSrc, false, false, false);
+                                        if (col == colSrc)
+                                        {
+                                            hyperlinks1.Append(AddLink(worksheet, col, (int)row));
+                                        }
                                     }
                                 }
                             }
-                            if (GetRowNumber(column) == 1 && rowDestination > 22) 
+                            if (GetRowNumber(column) == 1 && rowDestination > 22)
                             {
                                 for (uint val = 23; val <= rowDestination; val++)
                                 {
@@ -133,6 +139,7 @@ namespace ExcelAppOpenXML
                                 rowDestination = 22;
                             }
                             Merge(worksheet, ColumnLetter(column - 1) + rowSource, ColumnLetter(column - 1) + rowDestination);
+                            hyperlinks1.Append(AddLink(worksheet, column, rowSource));
                             StylesSheet1.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(column - 1), (uint)rowSource), false, GetRowNumber(column) == 3, GetRowNumber(column) == 2, GetRowNumber(column) == 1);
                         }
                         else if (dt.Rows[j].ItemArray[i].ToString() == dt.Rows[j + 1].ItemArray[i].ToString())
@@ -151,6 +158,10 @@ namespace ExcelAppOpenXML
                                     for (uint row = 6; row <= rowDestination; row++)
                                     {
                                         StylesSheet1.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(col - 1), row), col == colSrc, false, false, false);
+                                        if (col == colSrc)
+                                        {
+                                            hyperlinks1.Append(AddLink(worksheet, col, (int)row));
+                                        }
                                     }
                                 }
                             }
@@ -163,6 +174,7 @@ namespace ExcelAppOpenXML
                                 rowDestination = 22;
                             }
                             Merge(worksheet, ColumnLetter(column - 1) + rowSource, ColumnLetter(column - 1) + rowDestination);
+                            hyperlinks1.Append(AddLink(worksheet, column, rowSource));
                             StylesSheet1.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(column - 1), (uint)rowSource), false, GetRowNumber(column) == 3, GetRowNumber(column) == 2, GetRowNumber(column) == 1);
                             rowSource = int.Parse(dt.Rows[j + 1].ItemArray[dt.Columns.Count - 1].ToString());
                             column = int.Parse(dt.Rows[j + 1].ItemArray[i + 1].ToString());
@@ -170,7 +182,95 @@ namespace ExcelAppOpenXML
                     }
                 }
                 #endregion
+
+                InsertHyperLinkInWorksheet(worksheet, hyperlinks1);
+
+                //InsertTextExistingExcel(spreadSheet, worksheetPart1, 4, 2, "Date: " + date, true);
             }
+        }
+
+        #region HelperMethods
+        static Hyperlink AddLink(Worksheet worksheet, int column, int rowSource)
+        {
+            string src = GetSpreadsheetCell(worksheet, ColumnLetter(column - 1), Convert.ToUInt32(rowSource)).CellReference;
+            string des;
+            string value = GetSpreadsheetCell(worksheet, ColumnLetter(column - 1), Convert.ToUInt32(rowSource)).InnerText;
+            int desCol = FindStringColumn(GetRowNumber(column), value, GetDataFromAPI.dataTable2, GetBuId(column));
+            des = GetWorksheetName(column) + "!" + ColumnLetter(desCol == 0 ? 1 : desCol - 1) + GetColumnNumber(column);
+            Hyperlink hyperlink1 = new Hyperlink() { Reference = src, Location = des };
+            return hyperlink1;
+        }
+
+        static int FindStringColumn(int col, string str, DataTable dt, int buId)
+        {
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                string str1 = dt.Rows[i].ItemArray[dt.Columns.Count - 9].ToString();
+                if (int.Parse(str1) == buId)
+                {
+                    string str2 = dt.Rows[i].ItemArray[col].ToString();
+                    if (str2 == str)
+                    {
+                        return int.Parse(dt.Rows[i].ItemArray[dt.Columns.Count - 2].ToString());
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        static string GetWorksheetName(int i)
+        {
+            switch (i)
+            {
+                case 1: case 2: case 3: case 4: return "'Database & Connectivity'";
+                case 10: case 11: case 12: case 13: return "'Power Systems'";
+                default: return "'Z Systems'";
+            }
+        }
+
+        private static int GetColumnNumber(int i)
+        {
+            if (i == 4 || i == 13 || i == 22)
+            {
+                return 7;
+            }
+            else if (i == 3 || i == 12 || i == 21)
+            {
+                return 6;
+            }
+            else if (i == 2 || i == 11 || i == 20)
+            {
+                return 5;
+            }
+            else if (i == 1 || i == 10 || i == 19)
+            {
+                return 4;
+            }
+            else
+            {
+                return 2;
+            }
+        }
+
+        private static int GetBuId(int i)
+        {
+            switch (i)
+            {
+                case 1: case 2: case 3: case 4: return 1;
+                case 10: case 11: case 12: case 13: return 2;
+                default: return 3;
+            }
+        }
+
+        private static void InsertHyperLinkInWorksheet(Worksheet worksheet, Hyperlinks hyperlinks1)
+        {
+            PageMargins pageMargins = worksheet.Descendants<PageMargins>().First();
+            worksheet.InsertBefore<Hyperlinks>(hyperlinks1, pageMargins);
+            worksheet.Save();
         }
 
         public static void DeleteTextFromCell(WorksheetPart worksheetPart, string colName, uint rowIndex)
@@ -196,7 +296,7 @@ namespace ExcelAppOpenXML
             }
             else
             {
-                return 1;
+                return 4;
             }
         }
 
@@ -209,85 +309,44 @@ namespace ExcelAppOpenXML
                 mergeCells = worksheet.Elements<MergeCells>().First();
             }
             else
-
             {
-
                 mergeCells = new MergeCells();
-
-                // Insert a MergeCells object into the specified position.
-
                 if (worksheet.Elements<CustomSheetView>().Count() > 0)
-
                 {
-
                     worksheet.InsertAfter(mergeCells, worksheet.Elements<CustomSheetView>().First());
-
                 }
-
                 else if (worksheet.Elements<DataConsolidate>().Count() > 0)
-
                 {
-
                     worksheet.InsertAfter(mergeCells, worksheet.Elements<DataConsolidate>().First());
-
                 }
-
                 else if (worksheet.Elements<SortState>().Count() > 0)
-
                 {
-
                     worksheet.InsertAfter(mergeCells, worksheet.Elements<SortState>().First());
-
                 }
-
                 else if (worksheet.Elements<AutoFilter>().Count() > 0)
-
                 {
-
                     worksheet.InsertAfter(mergeCells, worksheet.Elements<AutoFilter>().First());
-
                 }
-
                 else if (worksheet.Elements<Scenarios>().Count() > 0)
-
                 {
-
                     worksheet.InsertAfter(mergeCells, worksheet.Elements<Scenarios>().First());
-
                 }
-
                 else if (worksheet.Elements<ProtectedRanges>().Count() > 0)
-
                 {
-
                     worksheet.InsertAfter(mergeCells, worksheet.Elements<ProtectedRanges>().First());
-
                 }
-
                 else if (worksheet.Elements<SheetProtection>().Count() > 0)
-
                 {
-
                     worksheet.InsertAfter(mergeCells, worksheet.Elements<SheetProtection>().First());
-
                 }
-
                 else if (worksheet.Elements<SheetCalculationProperties>().Count() > 0)
-
                 {
-
                     worksheet.InsertAfter(mergeCells, worksheet.Elements<SheetCalculationProperties>().First());
-
                 }
-
                 else
-
                 {
-
                     worksheet.InsertAfter(mergeCells, worksheet.Elements<SheetData>().First());
-
                 }
-
             }
 
             MergeCell mergeCell = new MergeCell() { Reference = new StringValue(cell1Name + ":" + cell2Name) };
@@ -413,10 +472,7 @@ namespace ExcelAppOpenXML
         {
             IEnumerable<Sheet> sheets = document.WorkbookPart.Workbook.GetFirstChild<Sheets>().
                             Elements<Sheet>().Where(s => s.Name == sheetName);
-            if (sheets.Count() == 0)
-            {
-                return null;
-            }
+
             string relationshipId = sheets.First().Id.Value;
             WorksheetPart worksheetPart = (WorksheetPart)document.WorkbookPart.GetPartById(relationshipId);
             return worksheetPart;
@@ -434,5 +490,6 @@ namespace ExcelAppOpenXML
 
             return string.Concat(firstLetter, secondLetter, thirdLetter).Trim();
         }
+        #endregion
     }
 }
