@@ -15,15 +15,17 @@ namespace ExcelAppOpenXML
         {
             SourcePath = Server.MapPath("~/Template/MyDataTemplate.xlsx");
             DesPath = Server.MapPath("~/Template/Rocket Product Hierarchy.xlsx");
+            this.Title = "Downloading Excel...";
+            DownLoadExcel();
         }
 
-        protected void LinkButton1_Click(object sender, EventArgs e)
+        protected void DownLoadExcel()
         {
             GetDataFromAPI.LoadAPI();
             Export_Data.WriteToExcel();
 
             Response.ContentType = "Application/x-msexcel";
-            Response.AppendHeader("Content-Disposition", "attachment; filename=Rocket Product Hierarchy.xlsx");
+            Response.AddHeader("Content-Disposition", "attachment; filename=" + string.Format("Rocket Product Hierarchy" + " (" + Export_Data.date + ")" +".xlsx"));
             Response.TransmitFile(DesPath);
             Response.End();
         }

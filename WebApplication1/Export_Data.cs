@@ -184,12 +184,11 @@ namespace ExcelAppOpenXML
                 #endregion
 
                 InsertHyperLinkInWorksheet(worksheet, hyperlinks1);
-
-                //InsertTextExistingExcel(spreadSheet, worksheetPart1, 4, 2, "Date: " + date, true);
             }
         }
 
         #region HelperMethods
+
         static Hyperlink AddLink(Worksheet worksheet, int column, int rowSource)
         {
             string src = GetSpreadsheetCell(worksheet, ColumnLetter(column - 1), Convert.ToUInt32(rowSource)).CellReference;
@@ -436,12 +435,12 @@ namespace ExcelAppOpenXML
         public static void InsertTextExistingExcel(SpreadsheetDocument spreadSheet, WorksheetPart worksheetPart, int columns, uint rows, string cellData, bool isPage1)
         {
             Cell cell = InsertCellInWorksheet(ColumnLetter(columns - 1), rows, worksheetPart);
+            cell.DataType = CellValues.InlineString;
+            cell.InlineString = new InlineString() { Text = new Text(cellData) };
             if (rows == 7 && !isPage1)
             {
                 StylesSheet2.AddBold(spreadSheet, cell, 7);
             }
-            cell.CellValue = new CellValue(cellData);
-            cell.DataType = new EnumValue<CellValues>(CellValues.SharedString);
             worksheetPart.Worksheet.Save();
         }
 

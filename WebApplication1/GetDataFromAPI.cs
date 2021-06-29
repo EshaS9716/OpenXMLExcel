@@ -24,9 +24,9 @@ namespace ExcelAppOpenXML
 
         public static void LoadAPI()
         {
-            //dt = ReadFromApi();
-            //DataTable = Copy(dt);
-            //SendToDb();
+            dt = ReadFromApi();
+            DataTable = Copy(dt);
+            SendToDb();
             PopulateDatatables();
         }
 
@@ -118,21 +118,21 @@ namespace ExcelAppOpenXML
         {
             var pCode = "select * from rocket_pcode_excel";
             var hierarchy = "select * from rocket_hierarchy_excel";
-            //var sp_Page1 = "Page1";
-            //var sp_Page2 = "Page2";
+            var sp_Page1 = "Page1";
+            var sp_Page2 = "Page2";
 
             dbConn.Open();
 
-            //using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Page1, dbConn))
-            //{
-            //    cmd.CommandType = CommandType.StoredProcedure;
-            //    cmd.ExecuteNonQuery();
-            //}
-            //using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Page2, dbConn))
-            //{
-            //    cmd.CommandType = CommandType.StoredProcedure;
-            //    cmd.ExecuteNonQuery();
-            //}
+            using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Page1, dbConn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.ExecuteNonQuery();
+            }
+            using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Page2, dbConn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.ExecuteNonQuery();
+            }
             using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(hierarchy, dbConn))
             {
                 var mdr = cmd.ExecuteReader();
