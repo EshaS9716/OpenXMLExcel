@@ -31,15 +31,15 @@ namespace ExcelAppOpenXML
                 WorksheetPart worksheetPart3 = GetWorksheetPartByName(spreadSheet, "Z Systems");
 
                 #region Populate & Merge
-                foreach (DataRow item in dt.Rows)
+                for (int i = 0; i < dt.Rows.Count - 1; i++)
                 {
-                    int sheetNum = int.Parse(item[1].ToString());
-                    uint rows = uint.Parse(item[dt.Columns.Count - 1].ToString());
-                    int columns = int.Parse(item[dt.Columns.Count - 2].ToString());
-                    string cellData = item[dt.Columns.Count - 3].ToString();
-                    string cellDataLevel2 = item[dt.Columns.Count - 8].ToString();
-                    string cellDataLevel3 = item[dt.Columns.Count - 7].ToString();
-                    string cellDataLevel4 = item[dt.Columns.Count - 6].ToString();
+                    int sheetNum = int.Parse(dt.Rows[i].ItemArray[1].ToString());
+                    uint rows = uint.Parse(dt.Rows[i].ItemArray[dt.Columns.Count - 1].ToString());
+                    int columns = int.Parse(dt.Rows[i].ItemArray[dt.Columns.Count - 2].ToString());
+                    string cellData = dt.Rows[i].ItemArray[dt.Columns.Count - 3].ToString();
+                    string cellDataLevel2 = dt.Rows[i].ItemArray[dt.Columns.Count - 8].ToString();
+                    string cellDataLevel3 = dt.Rows[i].ItemArray[dt.Columns.Count - 7].ToString();
+                    string cellDataLevel4 = dt.Rows[i].ItemArray[dt.Columns.Count - 6].ToString();
 
                     if (sheetNum == 1)
                     {
@@ -434,14 +434,17 @@ namespace ExcelAppOpenXML
 
         public static void InsertTextExistingExcel(SpreadsheetDocument spreadSheet, WorksheetPart worksheetPart, int columns, uint rows, string cellData, bool isPage1)
         {
-            Cell cell = InsertCellInWorksheet(ColumnLetter(columns - 1), rows, worksheetPart);
-            cell.DataType = CellValues.InlineString;
-            cell.InlineString = new InlineString() { Text = new Text(cellData) };
-            if (rows == 7 && !isPage1)
+            if (GetSpreadsheetCell(worksheetPart.Worksheet, ColumnLetter(columns - 1), rows) == null)
             {
-                StylesSheet2.AddBold(spreadSheet, cell, 7);
+                Cell cell = InsertCellInWorksheet(ColumnLetter(columns - 1), rows, worksheetPart);
+                cell.DataType = CellValues.InlineString;
+                cell.InlineString = new InlineString() { Text = new Text(cellData) };
+                if (rows == 7 && !isPage1)
+                {
+                    StylesSheet2.AddBold(spreadSheet, cell, 7);
+                }
+                worksheetPart.Worksheet.Save();
             }
-            worksheetPart.Worksheet.Save();
         }
 
         private static Cell InsertCellInWorksheet(string columnName, uint rowIndex, WorksheetPart worksheetPart)
