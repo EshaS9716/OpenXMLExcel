@@ -1,0 +1,33 @@
+-----------Exception Details on 7/6/2021 9:41:46 PM-----------------
+--------------------------------------------------------------------
+
+Error Line No : GetDataFromAPI.cs:line 79
+Error Message: InvalidOperationException
+Exception Type: System.InvalidOperationException
+Error Location : Sequence contains no elements
+
+-------------------------------*End*--------------------------------
+
+
+-----------Exception Details on 7/6/2021 9:42:45 PM-----------------
+--------------------------------------------------------------------
+
+Error Line No : GetDataFromAPI.cs:line 79
+Error Message: InvalidOperationException
+Exception Type: System.InvalidOperationException
+Error Location : Sequence contains no elements
+
+-------------------------------*End*--------------------------------
+
+
+-----------Exception Details on 7/6/2021 9:44:05 PM-----------------
+--------------------------------------------------------------------
+
+Error Line No : GetDataFromAPI.cs:line 45
+Error Message: MySqlException
+Exception Type: MySql.Data.MySqlClient.MySqlException
+Error Location : Authentication to host 'walstgpimcore01' for user 'esahu' using method 'caching_sha2_password' failed with message: Access denied for user 'esahu'@'%' to database 'esha_de'
+
+-------------------------------*End*--------------------------------
+
+

@@ -1,0 +1,46 @@
+-----------Exception Details on 9/2/2021 3:58:14 PM-----------------
+--------------------------------------------------------------------
+
+Error Line No : Export_Data.cs:line 123
+Error Message: FormatException
+Exception Type: System.FormatException
+Error Location : Input string was not in a correct format.
+
+-------------------------------*End*--------------------------------
+
+
+-----------Exception Details on 9/2/2021 3:59:58 PM-----------------
+--------------------------------------------------------------------
+
+Error Line No : Export_Data.cs:line 123
+Error Message: FormatException
+Exception Type: System.FormatException
+Error Location : Input string was not in a correct format.
+
+-------------------------------*End*--------------------------------
+
+
+-----------Exception Details on 9/2/2021 4:09:32 PM-----------------
+--------------------------------------------------------------------
+
+Error Line No : Export_Data.cs:line 231
+Error Message: ArgumentOutOfRangeException
+Exception Type: System.ArgumentOutOfRangeException
+Error Location : Row index can't be negative.
+Parameter name: index
+Actual value was -1.
+
+-------------------------------*End*--------------------------------
+
+
+-----------Exception Details on 9/2/2021 5:09:27 PM-----------------
+--------------------------------------------------------------------
+
+Error Line No : Export_Data.cs:line 29
+Error Message: IOException
+Exception Type: System.IO.IOException
+Error Location : The process cannot access the file 'C:\Users\esahu\source\repos\OpenXMLExcel\WebApplication1\Template\Rocket Product Hierarchy.xlsx' because it is being used by another process.
+
+-------------------------------*End*--------------------------------
+
+

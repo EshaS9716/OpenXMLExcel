@@ -1,0 +1,11 @@
+-----------Exception Details on 7/12/2021 4:46:47 PM-----------------
+--------------------------------------------------------------------
+
+Error Line No : GetDataFromAPI.cs:line 79
+Error Message: InvalidOperationException
+Exception Type: System.InvalidOperationException
+Error Location : Sequence contains no elements
+
+-------------------------------*End*--------------------------------
+
+

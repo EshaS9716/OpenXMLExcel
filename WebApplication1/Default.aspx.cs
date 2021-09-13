@@ -21,8 +21,10 @@ namespace ExcelAppOpenXML
 
         protected void DownLoadExcel()
         {
-            GetDataFromAPI.LoadAPI();
-            Export_Data.WriteToExcel();
+            if (!GetDataFromAPI.LoadAPI())
+            {
+                Export_Data.WriteToExcel();
+            }
 
             Response.ContentType = "Application/x-msexcel";
             Response.AddHeader("Content-Disposition", "attachment; filename=" + string.Format("Rocket Product Hierarchy" + " (" + Export_Data.date + ")" +".xlsx"));

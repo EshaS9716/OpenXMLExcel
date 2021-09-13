@@ -16,18 +16,57 @@ namespace ExcelAppOpenXML
         public static DataTable dt = new DataTable();
         public static DataTable dataTable1 = new DataTable();
         public static DataTable dataTable2 = new DataTable();
+        public static DataTable dataTable3 = new DataTable();
 
         public static MySql.Data.MySqlClient.MySqlConnection dbConn = new MySql.Data.MySqlClient.MySqlConnection("user id=esahu;server=walstgpimcore01;database=esha_dev;password=Dev*eSha");
-        public static string baseUrl = "http://walprdpim01.rocketsoftware.com/api/productmasterlisting";
+        public static string baseUrl = "http://walprdpimcore01.rocketsoftware.com/api/productmasterlisting";
         public static string headerName = "token";
-        public static string headerValue = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMTIzIiwiZXhwIjozMzE0NDI4NjA5NCwiaXNzIjoid2FscHJkcGltMDEucm9ja2V0c29mdHdhcmUuY29tIiwiaWF0IjoxNjA4Mjg2MDk0fQ.mbU3B1kBjewDmvI4c1jkMir89nPF84sL0ecjTtvC1og";
+        public static string headerValue = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMDEiLCJleHAiOjMzMTY0NTg3NzgyLCJpc3MiOiJ3YWxwcmRwaW1jb3JlMDEucm9ja2V0c29mdHdhcmUuY29tIiwiaWF0IjoxNjI4NTg3NzgyfQ.xjqnMHUcMkuFnmgVY3y6EOsNsVMyELOQVI1XZA2oRdE";
 
-        public static void LoadAPI()
+        public static bool LoadAPI()
         {
+            ReadFromSP();
             dt = ReadFromApi();
             DataTable = Copy(dt);
-            SendToDb();
-            PopulateDatatables();
+            //if (!AreTablesTheSame(DataTable))
+            //{
+                SendToDb();
+                PopulateDatatables();
+                return false;
+            //}
+            //return true;
+        }
+
+        static bool AreTablesTheSame(DataTable tbl1)
+        {
+            try
+            {
+                DataTable tbl2 = new DataTable();
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("select * from rocket_data_pimcore", dbConn))
+                {
+                    dbConn.Open();
+                    var mdr = cmd.ExecuteReader();
+                    tbl2.Load(mdr);
+                    dbConn.Close();
+                }
+                if (tbl1.Rows.Count != tbl2.Rows.Count || tbl1.Columns.Count != tbl2.Columns.Count)
+                    return false;
+
+                for (int i = 0; i < tbl1.Rows.Count; i++)
+                {
+                    for (int c = 0; c < tbl1.Columns.Count; c++)
+                    {
+                        if (!Equals(tbl1.Rows[i][c], tbl2.Rows[i][c]))
+                            return false;
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                ErrorLogging.SendErrorToText(ex);
+                throw ex;
+            }
         }
 
         private static DataTable ReadFromApi()
@@ -43,6 +82,7 @@ namespace ExcelAppOpenXML
             }
             catch (Exception ex)
             {
+                ErrorLogging.SendErrorToText(ex);
                 throw ex;
             }
         }
@@ -96,22 +136,52 @@ namespace ExcelAppOpenXML
             return selected;
         }
 
+        private static void ReadFromSP()
+        {
+            try
+            {
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("Page5", dbConn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    dbConn.Open();
+                    using (MySql.Data.MySqlClient.MySqlDataAdapter da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
+                    {
+                        da.Fill(dataTable3);
+                    }
+                    dbConn.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogging.SendErrorToText(ex);
+                throw ex;
+            }
+        }
+
         private static void SendToDb()
         {
-            using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("Datasheet", dbConn))
+            try
             {
-                cmd.CommandType = CommandType.StoredProcedure;
-                dbConn.Open();
-                cmd.ExecuteNonQuery();
-                dbConn.Close();
-            }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("Datasheet", dbConn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    dbConn.Open();
+                    cmd.ExecuteNonQuery();
+                    dbConn.Close();
+                }
 
-            MySqlConnector.MySqlConnection connection = new MySqlConnector.MySqlConnection("user id=esahu;server=walstgpimcore01;database=esha_dev;password=Dev*eSha;AllowLoadLocalInfile=true");
-            connection.Open();
-            var bulkCopy = new MySqlBulkCopy(connection);
-            bulkCopy.DestinationTableName = "rocket_data_pimcore";
-            bulkCopy.WriteToServer(DataTable);
-            connection.Close();
+                MySqlConnector.MySqlConnection connection = new MySqlConnector.MySqlConnection("user id=esahu;server=walstgpimcore01;database=esha_dev;password=Dev*eSha;AllowLoadLocalInfile=true");
+                connection.Open();
+                var bulkCopy = new MySqlBulkCopy(connection);
+                bulkCopy.DestinationTableName = "rocket_data_pimcore";
+                bulkCopy.WriteToServer(DataTable);
+                connection.Close();
+            }
+            catch (Exception ex)
+            {
+                ErrorLogging.SendErrorToText(ex);
+                throw ex;
+            }
         }
 
         private static void PopulateDatatables()
@@ -121,30 +191,38 @@ namespace ExcelAppOpenXML
             var sp_Page1 = "Page1";
             var sp_Page2 = "Page2";
 
-            dbConn.Open();
+            try
+            {
+                dbConn.Open();
 
-            using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Page1, dbConn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.ExecuteNonQuery();
-            }
-            using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Page2, dbConn))
-            {
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.ExecuteNonQuery();
-            }
-            using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(hierarchy, dbConn))
-            {
-                var mdr = cmd.ExecuteReader();
-                dataTable1.Load(mdr);
-            }
-            using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(pCode, dbConn))
-            {
-                var mdr = cmd.ExecuteReader();
-                dataTable2.Load(mdr);
-            }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Page1, dbConn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.ExecuteNonQuery();
+                }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Page2, dbConn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.ExecuteNonQuery();
+                }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(hierarchy, dbConn))
+                {
+                    var mdr = cmd.ExecuteReader();
+                    dataTable1.Load(mdr);
+                }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(pCode, dbConn))
+                {
+                    var mdr = cmd.ExecuteReader();
+                    dataTable2.Load(mdr);
+                }
 
-            dbConn.Close();
+                dbConn.Close();
+            }
+            catch (Exception ex)
+            {
+                ErrorLogging.SendErrorToText(ex);
+                throw ex;
+            }
         }
     }
 }
