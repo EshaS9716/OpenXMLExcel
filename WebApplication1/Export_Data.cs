@@ -99,7 +99,7 @@ namespace ExcelAppOpenXML
                 using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
                 {
                     WorksheetPart worksheetPart1 = GetWorksheetPartByName(spreadSheet, "Hierarchy");
-                    WorksheetPart worksheetPart5 = GetWorksheetPartByName(spreadSheet, "Product Count");
+                    WorksheetPart worksheetPart5 = GetWorksheetPartByName(spreadSheet, "Product Summary");
 
                     Worksheet worksheet = worksheetPart1.Worksheet;
 
@@ -509,7 +509,7 @@ namespace ExcelAppOpenXML
                 Cell cell = InsertCellInWorksheet(ColumnLetter(columns - 1), rows, worksheetPart);
                 cell.DataType = CellValues.InlineString;
                 cell.InlineString = new InlineString() { Text = new Text(cellData) };
-                if (worksheetPart == GetWorksheetPartByName(spreadSheet, "Product Count"))
+                if (worksheetPart == GetWorksheetPartByName(spreadSheet, "Product Summary"))
                 {
                     StylesSheet5.AddBold(spreadSheet, cell, columns, isPage1);
                 }
