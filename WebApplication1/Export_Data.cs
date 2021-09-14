@@ -3,16 +3,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Web;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using GemBox.Spreadsheet;
 using AutoFilter = DocumentFormat.OpenXml.Spreadsheet.AutoFilter;
 using SortState = DocumentFormat.OpenXml.Spreadsheet.SortState;
-using X14 = DocumentFormat.OpenXml.Office2010.Excel;
-using X15 = DocumentFormat.OpenXml.Office2013.Excel;
 
 namespace ExcelAppOpenXML
 {
@@ -92,15 +88,12 @@ namespace ExcelAppOpenXML
             try
             {
                 DataTable dt = GetDataFromAPI.dataTable1;
-                DataTable dtCount = GetDataFromAPI.dataTable3;
                 int rowSource, rowDestination, column, i, j;
                 Hyperlinks hyperlinks1 = new Hyperlinks();
 
                 using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
                 {
                     WorksheetPart worksheetPart1 = GetWorksheetPartByName(spreadSheet, "Hierarchy");
-                    WorksheetPart worksheetPart5 = GetWorksheetPartByName(spreadSheet, "Product Summary");
-
                     Worksheet worksheet = worksheetPart1.Worksheet;
 
                     #region Populate
@@ -115,28 +108,6 @@ namespace ExcelAppOpenXML
                             InsertTextExistingExcel(spreadSheet, worksheetPart1, columns, row, cellData, true);
                         }
                     }
-                    #endregion
-
-                    #region Populate Count Page
-
-                    for (i = 0; i <= dtCount.Rows.Count - 1; i++)
-                    {
-                        for (j = 0; j <= dtCount.Columns.Count - 1; j++)
-                        {
-                            string cellData = dtCount.Rows[i].ItemArray[j].ToString();
-                            bool buChanged = false;
-                            if (dtCount.Rows.Count == i + 1)
-                            {
-                                buChanged = true;
-                            }
-                            else if (dtCount.Rows[i].ItemArray[0].ToString() != dtCount.Rows[i + 1].ItemArray[0].ToString())
-                            {
-                                buChanged = true;
-                            }
-                            InsertTextExistingExcel(spreadSheet, worksheetPart5, j + 1, (uint)(i + 2), cellData, buChanged);
-                        }
-                    }
-
                     #endregion
 
                     #region Merge and Format
@@ -222,6 +193,42 @@ namespace ExcelAppOpenXML
                     #endregion
 
                     InsertHyperLinkInWorksheet(worksheet, hyperlinks1);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogging.SendErrorToText(ex);
+                throw ex;
+            }
+        }
+
+        public static void WriteToExcel5()
+        {
+            int i, j;
+            try
+            {
+                DataTable dtCount = GetDataFromAPI.dataTable3;
+
+                using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
+                {
+                    WorksheetPart worksheetPart5 = GetWorksheetPartByName(spreadSheet, "Product Summary");
+                    for (i = 0; i <= dtCount.Rows.Count - 1; i++)
+                    {
+                        for (j = 0; j <= dtCount.Columns.Count - 1; j++)
+                        {
+                            string cellData = dtCount.Rows[i].ItemArray[j].ToString();
+                            bool buChanged = false;
+                            if (dtCount.Rows.Count == i + 1)
+                            {
+                                buChanged = true;
+                            }
+                            else if (dtCount.Rows[i].ItemArray[0].ToString() != dtCount.Rows[i + 1].ItemArray[0].ToString())
+                            {
+                                buChanged = true;
+                            }
+                            InsertTextExistingExcel(spreadSheet, worksheetPart5, j + 1, (uint)(i + 2), cellData, buChanged);
+                        }
+                    }
                 }
             }
             catch (Exception ex)

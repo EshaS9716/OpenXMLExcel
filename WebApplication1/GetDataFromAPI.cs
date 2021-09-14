@@ -28,13 +28,14 @@ namespace ExcelAppOpenXML
             ReadFromSP();
             dt = ReadFromApi();
             DataTable = Copy(dt);
-            //if (!AreTablesTheSame(DataTable))
-            //{
+
+            if (!AreTablesTheSame(DataTable))
+            {
                 SendToDb();
                 PopulateDatatables();
                 return false;
-            //}
-            //return true;
+            }
+            return true;
         }
 
         static bool AreTablesTheSame(DataTable tbl1)
