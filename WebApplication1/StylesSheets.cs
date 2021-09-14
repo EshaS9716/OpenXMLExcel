@@ -12,7 +12,7 @@ namespace ExcelAppOpenXML
     {
         public static void AddBold(SpreadsheetDocument document, Cell c, int column, bool buChanged)
         {
-            if (column > 4 && column < 8)
+            if (column > 4 && column < 7)
             {
                 Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, column);
                 Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, buChanged);
@@ -89,7 +89,7 @@ namespace ExcelAppOpenXML
             Fill fill1 = new Fill();
             PatternFill patternFill5 = new PatternFill() { PatternType = PatternValues.Solid };
             ForegroundColor foregroundColor3 = new ForegroundColor();
-            if (col > 4 && col < 8)
+            if (col > 4 && col < 7)
             {
                 foregroundColor3 = new ForegroundColor() { Rgb = "e7e7e7" };
             }
