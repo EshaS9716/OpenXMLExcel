@@ -12,7 +12,7 @@ namespace ExcelAppOpenXML
     {
         public static void AddBold(SpreadsheetDocument document, Cell c, int column, bool buChanged)
         {
-            if (column > 4 && column < 7)
+            if (IsBkgColor(column))
             {
                 Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, column);
                 Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, buChanged);
@@ -26,6 +26,16 @@ namespace ExcelAppOpenXML
                 Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, buChanged);
                 AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders);
                 c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
+            }
+        }
+
+        static bool IsBkgColor(int col)
+        {
+            switch (col)
+            {
+                case 5: case 6: case 8: case 9: case 10: case 11: return true;
+                default:
+                    return false;
             }
         }
 
@@ -64,14 +74,14 @@ namespace ExcelAppOpenXML
                 font2.Append(underline);
                 font2.Append(italic);
             }
-            else if (col > 4 && col < 8)
+            else if (IsBkgColor(col))
             {
                 color.Rgb = "003366";
                 fontSize2.Val = 11D;
                 font2.Append(bold1);
                 font2.Append(italic);
             }
-            else if (col > 7)
+            else
             {
                 color.Rgb = "003366";
                 fontSize2.Val = 10D;
@@ -92,6 +102,14 @@ namespace ExcelAppOpenXML
             if (col > 4 && col < 7)
             {
                 foregroundColor3 = new ForegroundColor() { Rgb = "e7e7e7" };
+            }
+            else if (col == 8 || col == 10)
+            {
+                foregroundColor3 = new ForegroundColor() { Rgb = "e1fccc" };
+            }
+            else if (col == 9 || col == 11)
+            {
+                foregroundColor3 = new ForegroundColor() { Rgb = "F2DCDB" };
             }
             patternFill5.Append(foregroundColor3);
             fill1.Append(patternFill5);
