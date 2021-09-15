@@ -26,6 +26,7 @@ namespace ExcelAppOpenXML
                 Export_Data.WriteToExcel();
             }
             Export_Data.WriteToExcel5();
+            Export_Data.Autofit();
 
             Response.ContentType = "Application/x-msexcel";
             Response.AddHeader("Content-Disposition", "attachment; filename=" + string.Format("Rocket Product Hierarchy" + " (" + Export_Data.date + ")" +".xlsx"));

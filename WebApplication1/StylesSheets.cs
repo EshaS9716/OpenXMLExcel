@@ -33,7 +33,7 @@ namespace ExcelAppOpenXML
         {
             switch (col)
             {
-                case 5: case 6: case 8: case 9: case 10: case 11: return true;
+                case 5: case 6: case 8: case 9: case 10: case 11: case 12: case 13: case 15: case 16: case 17: case 18: return true;
                 default:
                     return false;
             }
@@ -99,15 +99,15 @@ namespace ExcelAppOpenXML
             Fill fill1 = new Fill();
             PatternFill patternFill5 = new PatternFill() { PatternType = PatternValues.Solid };
             ForegroundColor foregroundColor3 = new ForegroundColor();
-            if (col > 4 && col < 7)
+            if (col > 4 && col < 14)
             {
                 foregroundColor3 = new ForegroundColor() { Rgb = "e7e7e7" };
             }
-            else if (col == 8 || col == 10)
+            else if (col == 15 || col == 17)
             {
                 foregroundColor3 = new ForegroundColor() { Rgb = "e1fccc" };
             }
-            else if (col == 9 || col == 11)
+            else if (col == 16 || col == 18)
             {
                 foregroundColor3 = new ForegroundColor() { Rgb = "F2DCDB" };
             }

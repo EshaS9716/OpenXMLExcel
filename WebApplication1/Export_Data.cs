@@ -80,7 +80,6 @@ namespace ExcelAppOpenXML
                 throw ex;
             }
             WriteToExcel1();
-            Autofit();
         }
 
         private static void WriteToExcel1()
