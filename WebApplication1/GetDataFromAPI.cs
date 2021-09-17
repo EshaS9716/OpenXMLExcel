@@ -17,6 +17,7 @@ namespace ExcelAppOpenXML
         public static DataTable dataTable1 = new DataTable();
         public static DataTable dataTable2 = new DataTable();
         public static DataTable dataTable3 = new DataTable();
+        public static DataTable dataTable4 = new DataTable();
 
         public static MySql.Data.MySqlClient.MySqlConnection dbConn = new MySql.Data.MySqlClient.MySqlConnection("user id=esahu;server=walstgpimcore01;database=esha_dev;password=Dev*eSha");
         public static string baseUrl = "http://walprdpimcore01.rocketsoftware.com/api/productmasterlisting";
@@ -29,13 +30,13 @@ namespace ExcelAppOpenXML
             dt = ReadFromApi();
             DataTable = Copy(dt);
 
-            if (!AreTablesTheSame(DataTable))
-            {
+            //if (!AreTablesTheSame(DataTable))
+            //{
                 SendToDb();
                 PopulateDatatables();
                 return false;
-            }
-            return true;
+            //}
+            //return true;
         }
 
         static bool AreTablesTheSame(DataTable tbl1)
@@ -141,16 +142,24 @@ namespace ExcelAppOpenXML
         {
             try
             {
+                dbConn.Open();
                 using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("Page5", dbConn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    dbConn.Open();
                     using (MySql.Data.MySqlClient.MySqlDataAdapter da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
                     {
                         da.Fill(dataTable3);
                     }
-                    dbConn.Close();
                 }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("Page6", dbConn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    using (MySql.Data.MySqlClient.MySqlDataAdapter da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
+                    {
+                        da.Fill(dataTable4);
+                    }
+                }
+                dbConn.Close();
             }
             catch (Exception ex)
             {

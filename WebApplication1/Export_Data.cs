@@ -207,10 +207,12 @@ namespace ExcelAppOpenXML
             try
             {
                 DataTable dtCount = GetDataFromAPI.dataTable3;
+                DataTable dtTierCount = GetDataFromAPI.dataTable4;
 
                 using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
                 {
                     WorksheetPart worksheetPart5 = GetWorksheetPartByName(spreadSheet, "Product Summary");
+                    WorksheetPart worksheetPart6 = GetWorksheetPartByName(spreadSheet, "Tier Summary");
                     for (i = 0; i <= dtCount.Rows.Count - 1; i++)
                     {
                         for (j = 0; j <= dtCount.Columns.Count - 1; j++)
@@ -228,6 +230,15 @@ namespace ExcelAppOpenXML
                             InsertTextExistingExcel(spreadSheet, worksheetPart5, j + 1, (uint)(i + 2), cellData, buChanged);
                         }
                     }
+
+                    //for (i = 0; i <= dtTierCount.Rows.Count - 1; i++)
+                    //{
+                    //    for (j = 0; j <= dtTierCount.Columns.Count - 1; j++)
+                    //    {
+                    //        string cellData = dtTierCount.Rows[i].ItemArray[j].ToString();
+                    //        InsertTextExistingExcel(spreadSheet, worksheetPart6, j + 1, (uint)(i + 2), cellData, true);
+                    //    }
+                    //}
                 }
             }
             catch (Exception ex)
@@ -242,6 +253,7 @@ namespace ExcelAppOpenXML
             try
             {
                 SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
+                SpreadsheetInfo.FreeLimitReached += (sender, e) => e.FreeLimitReachedAction = FreeLimitReachedAction.ContinueAsTrial;
 
                 var workbook = ExcelFile.Load(filePath);
 
