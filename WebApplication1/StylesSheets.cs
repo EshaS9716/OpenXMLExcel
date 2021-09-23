@@ -8,6 +8,112 @@ using System.Web;
 
 namespace ExcelAppOpenXML
 {
+    public static class StyleSheet6
+    {
+        public static void AddBold(SpreadsheetDocument document, Cell c, int column, bool buChanged)
+        {
+            if (buChanged)
+            {
+                Fills fi = AddFills(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills);
+                AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills);
+                c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
+            }
+            else
+            {
+                Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, column);
+                Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders);
+                AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders);
+                c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
+            }
+        }
+
+        static Fonts AddFont(Fonts fs, int col)
+        {
+            Font font2 = new Font();
+            Bold bold1 = new Bold();
+            Italic italic = new Italic();
+            Underline underline = new Underline();
+            FontSize fontSize2 = new FontSize();
+            Color color = new Color();
+
+            if (col == 1)
+            {
+                fontSize2.Val = 12.5D;
+                font2.Append(bold1);
+                font2.Append(italic);
+            }
+            else if (col == 2)
+            {
+                color.Rgb = "862d2d";
+                fontSize2.Val = 11D;
+                font2.Append(bold1);
+                font2.Append(italic);
+            }
+            else if (col == 3)
+            {
+                color.Rgb = "002b80";
+                fontSize2.Val = 11D;
+                font2.Append(bold1);
+            }
+            else if (col == 4)
+            {
+                color.Rgb = "002b80";
+                fontSize2.Val = 11D;
+                font2.Append(underline);
+                font2.Append(italic);
+            }
+            else
+            {
+                color.Rgb = "003366";
+                fontSize2.Val = 10D;
+                font2.Append(italic);
+            }
+            font2.Append(fontSize2);
+            font2.Append(color);
+
+            fs.Append(font2);
+            return fs;
+        }
+
+        static Borders AddBorders(Borders borders)
+        {
+            Border border = new Border();
+            RightBorder border1 = new RightBorder() { Style = BorderStyleValues.Thin };
+            Color color1 = new Color() { Indexed = (UInt32Value)64U };
+            border1.Append(color1);
+
+            border.Append(border1);
+
+            borders.Append(border);
+            return borders;
+        }
+
+        static Fills AddFills(Fills fills)
+        {
+            Fill fill1 = new Fill();
+            PatternFill patternFill5 = new PatternFill() { PatternType = PatternValues.Solid };
+            ForegroundColor foregroundColor3 = new ForegroundColor() { Rgb = "d4e3fa" };
+            
+            patternFill5.Append(foregroundColor3);
+            fill1.Append(patternFill5);
+
+            fills.Append(fill1);
+            return fills;
+        }
+
+        static void AddCellFormat(CellFormats cf, Fonts fs, Borders bs)
+        {
+            CellFormat cellFormat2 = new CellFormat(new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center }) { NumberFormatId = 0, FontId = (UInt32)(fs.Elements<Font>().Count() - 1), BorderId = (UInt32)(bs.Elements<Border>().Count() - 1), FormatId = 0, ApplyBorder = true, ApplyFont = true, ApplyAlignment = true };
+            cf.Append(cellFormat2);
+        }
+
+        static void AddCellFormat(CellFormats cf, Fills fills)
+        {
+            CellFormat cellFormat2 = new CellFormat() { FillId = (UInt32)(fills.Elements<Fill>().Count() - 1), ApplyFill = true };
+            cf.Append(cellFormat2);
+        }
+    }
+
     public static class StylesSheet5
     {
         public static void AddBold(SpreadsheetDocument document, Cell c, int column, bool buChanged)

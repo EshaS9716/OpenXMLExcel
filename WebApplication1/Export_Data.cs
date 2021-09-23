@@ -231,14 +231,22 @@ namespace ExcelAppOpenXML
                         }
                     }
 
-                    //for (i = 0; i <= dtTierCount.Rows.Count - 1; i++)
-                    //{
-                    //    for (j = 0; j <= dtTierCount.Columns.Count - 1; j++)
-                    //    {
-                    //        string cellData = dtTierCount.Rows[i].ItemArray[j].ToString();
-                    //        InsertTextExistingExcel(spreadSheet, worksheetPart6, j + 1, (uint)(i + 2), cellData, true);
-                    //    }
-                    //}
+                    for (i = 0; i <= dtTierCount.Rows.Count - 1; i++)
+                    {
+                        for (j = 0; j <= dtTierCount.Columns.Count - 1; j++)
+                        {
+                            string cellData = dtTierCount.Rows[i].ItemArray[j].ToString();
+                            bool buChanged = false;
+                            if (cellData == " ")
+                            {
+                                if (dtTierCount.Rows[i - 1].ItemArray[j].ToString() != " ")
+                                {
+                                    buChanged = true;
+                                }
+                            }
+                            InsertTextExistingExcel(spreadSheet, worksheetPart6, j + 1, (uint)(i + 2), cellData, buChanged);
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -258,7 +266,7 @@ namespace ExcelAppOpenXML
                 var workbook = ExcelFile.Load(filePath);
 
                 var worksheet = workbook.Worksheets[0];
-                for (int j = 0; j < 5; j++)
+                for (int j = 0; j < 6; j++)
                 {
                     worksheet = workbook.Worksheets[j];
                     int columnCount = worksheet.CalculateMaxUsedColumns();
@@ -530,6 +538,10 @@ namespace ExcelAppOpenXML
                 if (worksheetPart == GetWorksheetPartByName(spreadSheet, "Product Summary"))
                 {
                     StylesSheet5.AddBold(spreadSheet, cell, columns, isPage1);
+                }
+                else if (worksheetPart == GetWorksheetPartByName(spreadSheet, "Tier Summary"))
+                {
+                    StyleSheet6.AddBold(spreadSheet, cell, columns, isPage1);
                 }
                 else if (rows == 7 && !isPage1)
                 {
