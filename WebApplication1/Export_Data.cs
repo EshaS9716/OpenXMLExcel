@@ -16,6 +16,7 @@ namespace ExcelAppOpenXML
     {
         public static readonly string date = DateTime.Now.ToString("yyyy-MM-dd");
         public static string filePath = _Default.DesPath;
+        public static string fileTierPath = _Default.TierDesPath;
 
         public static void WriteToExcel()
         {
@@ -23,6 +24,7 @@ namespace ExcelAppOpenXML
             {
                 DataTable dt = GetDataFromAPI.dataTable2;
                 File.Copy(_Default.SourcePath, filePath, true);
+                File.Copy(_Default.TierSourcePath, fileTierPath, true);
                 int columnLen1 = 0, columnLen2 = 0, columnLen3 = 0;
 
                 using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
@@ -212,7 +214,6 @@ namespace ExcelAppOpenXML
                 using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
                 {
                     WorksheetPart worksheetPart5 = GetWorksheetPartByName(spreadSheet, "Product Summary");
-                    WorksheetPart worksheetPart6 = GetWorksheetPartByName(spreadSheet, "Tier Summary");
                     for (i = 0; i <= dtCount.Rows.Count - 1; i++)
                     {
                         for (j = 0; j <= dtCount.Columns.Count - 1; j++)
@@ -230,7 +231,11 @@ namespace ExcelAppOpenXML
                             InsertTextExistingExcel(spreadSheet, worksheetPart5, j + 1, (uint)(i + 2), cellData, buChanged);
                         }
                     }
+                }
 
+                using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(fileTierPath, true))
+                {
+                    WorksheetPart worksheetPart6 = GetWorksheetPartByName(spreadSheet, "Tier Summary");
                     for (i = 0; i <= dtTierCount.Rows.Count - 1; i++)
                     {
                         for (j = 0; j <= dtTierCount.Columns.Count - 1; j++)
@@ -244,7 +249,7 @@ namespace ExcelAppOpenXML
                                     buChanged = true;
                                 }
                             }
-                            InsertTextExistingExcel(spreadSheet, worksheetPart6, j + 1, (uint)(i + 2), cellData, buChanged);
+                            InsertTextExistingTierExcel(spreadSheet, worksheetPart6, j + 1, (uint)(i + 2), cellData, buChanged);
                         }
                     }
                 }
@@ -266,7 +271,7 @@ namespace ExcelAppOpenXML
                 var workbook = ExcelFile.Load(filePath);
 
                 var worksheet = workbook.Worksheets[0];
-                for (int j = 0; j < 6; j++)
+                for (int j = 0; j < 5; j++)
                 {
                     worksheet = workbook.Worksheets[j];
                     int columnCount = worksheet.CalculateMaxUsedColumns();
@@ -275,6 +280,33 @@ namespace ExcelAppOpenXML
                 }
 
                 workbook.Save(filePath);
+            }
+            catch (Exception ex)
+            {
+                ErrorLogging.SendErrorToText(ex);
+                throw ex;
+            }
+        }
+
+        public static void AutofitTiers()
+        {
+            try
+            {
+                SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
+                SpreadsheetInfo.FreeLimitReached += (sender, e) => e.FreeLimitReachedAction = FreeLimitReachedAction.ContinueAsTrial;
+
+                var workbook = ExcelFile.Load(fileTierPath);
+
+                var worksheet = workbook.Worksheets[0];
+                for (int j = 0; j < 1; j++)
+                {
+                    worksheet = workbook.Worksheets[j];
+                    int columnCount = worksheet.CalculateMaxUsedColumns();
+                    for (int i = 0; i < columnCount; i++)
+                        worksheet.Columns[i].AutoFit(1, worksheet.Rows[0], worksheet.Rows[worksheet.Rows.Count - 1]);
+                }
+
+                workbook.Save(fileTierPath);
             }
             catch (Exception ex)
             {
@@ -539,13 +571,24 @@ namespace ExcelAppOpenXML
                 {
                     StylesSheet5.AddBold(spreadSheet, cell, columns, isPage1);
                 }
-                else if (worksheetPart == GetWorksheetPartByName(spreadSheet, "Tier Summary"))
-                {
-                    StyleSheet6.AddBold(spreadSheet, cell, columns, isPage1);
-                }
                 else if (rows == 7 && !isPage1)
                 {
                     StylesSheet2.AddBold(spreadSheet, cell, 7);
+                }
+                worksheetPart.Worksheet.Save();
+            }
+        }
+
+        public static void InsertTextExistingTierExcel(SpreadsheetDocument spreadSheet, WorksheetPart worksheetPart, int columns, uint rows, string cellData, bool isPage1)
+        {
+            if (GetSpreadsheetCell(worksheetPart.Worksheet, ColumnLetter(columns - 1), rows) == null)
+            {
+                Cell cell = InsertCellInWorksheet(ColumnLetter(columns - 1), rows, worksheetPart);
+                cell.DataType = CellValues.InlineString;
+                cell.InlineString = new InlineString() { Text = new Text(cellData) };
+                if (worksheetPart == GetWorksheetPartByName(spreadSheet, "Tier Summary"))
+                {
+                    StyleSheet6.AddBold(spreadSheet, cell, columns, isPage1);
                 }
                 worksheetPart.Worksheet.Save();
             }
