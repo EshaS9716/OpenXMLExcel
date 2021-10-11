@@ -12,7 +12,6 @@ namespace ExcelAppOpenXML
 {
     public class GetDataFromAPI
     {
-        public static DataTable DataTable { get; set; }
         public static DataTable dt = new DataTable();
         public static DataTable dataTable1 = new DataTable();
         public static DataTable dataTable2 = new DataTable();
@@ -20,23 +19,20 @@ namespace ExcelAppOpenXML
         public static DataTable dataTable4 = new DataTable();
 
         public static MySql.Data.MySqlClient.MySqlConnection dbConn = new MySql.Data.MySqlClient.MySqlConnection("user id=esahu;server=walstgpimcore01;database=esha_dev;password=Dev*eSha");
-        public static string baseUrl = "http://walprdpimcore01.rocketsoftware.com/api/productmasterlisting";
+        public static string baseUrl = "http://walstgpim01.rocketsoftware.com/api/productmasterlisting";
         public static string headerName = "token";
-        public static string headerValue = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMDEiLCJleHAiOjMzMTY0NTg3NzgyLCJpc3MiOiJ3YWxwcmRwaW1jb3JlMDEucm9ja2V0c29mdHdhcmUuY29tIiwiaWF0IjoxNjI4NTg3NzgyfQ.xjqnMHUcMkuFnmgVY3y6EOsNsVMyELOQVI1XZA2oRdE";
+        public static string headerValue = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMSIsImV4cCI6MzMxNTg2MjQ0NDUsImlzcyI6IndhbHN0Z3BpbTAxLnJvY2tldHNvZnR3YXJlLmNvbSIsImlhdCI6MTYyMjYyNDQ0NX0.Ttf-dGsTZJibCtvREKwwhtYxggL8npInaiCQZDvkNQc";
 
         public static bool LoadAPI()
         {
-            ReadFromSP();
             dt = ReadFromApi();
-            DataTable = Copy(dt);
-
-            //if (!AreTablesTheSame(DataTable))
-            //{
+            if (!AreTablesTheSame(dt))
+            {
                 SendToDb();
                 PopulateDatatables();
                 return false;
-            //}
-            //return true;
+            }
+            return true;
         }
 
         static bool AreTablesTheSame(DataTable tbl1)
@@ -138,36 +134,6 @@ namespace ExcelAppOpenXML
             return selected;
         }
 
-        private static void ReadFromSP()
-        {
-            try
-            {
-                dbConn.Open();
-                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("Page5", dbConn))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    using (MySql.Data.MySqlClient.MySqlDataAdapter da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
-                    {
-                        da.Fill(dataTable3);
-                    }
-                }
-                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("Page6", dbConn))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    using (MySql.Data.MySqlClient.MySqlDataAdapter da = new MySql.Data.MySqlClient.MySqlDataAdapter(cmd))
-                    {
-                        da.Fill(dataTable4);
-                    }
-                }
-                dbConn.Close();
-            }
-            catch (Exception ex)
-            {
-                ErrorLogging.SendErrorToText(ex);
-                throw ex;
-            }
-        }
-
         private static void SendToDb()
         {
             try
@@ -184,7 +150,7 @@ namespace ExcelAppOpenXML
                 connection.Open();
                 var bulkCopy = new MySqlBulkCopy(connection);
                 bulkCopy.DestinationTableName = "rocket_data_pimcore";
-                bulkCopy.WriteToServer(DataTable);
+                bulkCopy.WriteToServer(dt);
                 connection.Close();
             }
             catch (Exception ex)
@@ -194,12 +160,16 @@ namespace ExcelAppOpenXML
             }
         }
 
-        private static void PopulateDatatables()
+        public static void PopulateDatatables()
         {
             var pCode = "select * from rocket_pcode_excel";
             var hierarchy = "select * from rocket_hierarchy_excel";
+            var pSummary = "select * from product_hierarchy";
+            var tSummary = "select * from tier_hierarchy";
             var sp_Page1 = "Page1";
             var sp_Page2 = "Page2";
+            var sp_Product = "ProductSummary";
+            var sp_Tier = "TierSummary";
 
             try
             {
@@ -215,6 +185,16 @@ namespace ExcelAppOpenXML
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.ExecuteNonQuery();
                 }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Product, dbConn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.ExecuteNonQuery();
+                }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Tier, dbConn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.ExecuteNonQuery();
+                }
                 using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(hierarchy, dbConn))
                 {
                     var mdr = cmd.ExecuteReader();
@@ -224,6 +204,16 @@ namespace ExcelAppOpenXML
                 {
                     var mdr = cmd.ExecuteReader();
                     dataTable2.Load(mdr);
+                }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(pSummary, dbConn))
+                {
+                    var mdr = cmd.ExecuteReader();
+                    dataTable3.Load(mdr);
+                }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(tSummary, dbConn))
+                {
+                    var mdr = cmd.ExecuteReader();
+                    dataTable4.Load(mdr);
                 }
 
                 dbConn.Close();

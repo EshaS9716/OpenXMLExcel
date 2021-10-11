@@ -29,14 +29,13 @@ namespace ExcelAppOpenXML
 
         protected void DownLoadExcel()
         {
-            //if (!GetDataFromAPI.LoadAPI())
-            //{
-            //    Export_Data.WriteToExcel();
-            //}
-            //Export_Data.WriteToExcel5();
+            if (!GetDataFromAPI.LoadAPI())
+            {
+                Export_Data.WriteToExcel();
+            }
 
-            //Export_Data.Autofit();
-            //Export_Data.AutofitTiers();
+            Export_Data.Autofit();
+            Export_Data.AutofitTiers();
 
             using (ZipFile zip = new ZipFile())
             {

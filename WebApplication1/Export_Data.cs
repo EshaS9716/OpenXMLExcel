@@ -24,7 +24,6 @@ namespace ExcelAppOpenXML
             {
                 DataTable dt = GetDataFromAPI.dataTable2;
                 File.Copy(_Default.SourcePath, filePath, true);
-                File.Copy(_Default.TierSourcePath, fileTierPath, true);
                 int columnLen1 = 0, columnLen2 = 0, columnLen3 = 0;
 
                 using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
@@ -82,6 +81,8 @@ namespace ExcelAppOpenXML
                 throw ex;
             }
             WriteToExcel1();
+            WriteToExcel5();
+            WriteToExcel6();
         }
 
         private static void WriteToExcel1()
@@ -209,7 +210,6 @@ namespace ExcelAppOpenXML
             try
             {
                 DataTable dtCount = GetDataFromAPI.dataTable3;
-                DataTable dtTierCount = GetDataFromAPI.dataTable4;
 
                 using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
                 {
@@ -232,6 +232,21 @@ namespace ExcelAppOpenXML
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogging.SendErrorToText(ex);
+                throw ex;
+            }
+        }
+
+        public static void WriteToExcel6()
+        {
+            int i, j;
+            try
+            {
+                File.Copy(_Default.TierSourcePath, fileTierPath, true);
+                DataTable dtTierCount = GetDataFromAPI.dataTable4;
 
                 using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(fileTierPath, true))
                 {
@@ -242,12 +257,13 @@ namespace ExcelAppOpenXML
                         {
                             string cellData = dtTierCount.Rows[i].ItemArray[j].ToString();
                             bool buChanged = false;
-                            if (cellData == " ")
+                            if (dtTierCount.Rows.Count == i + 1)
                             {
-                                if (dtTierCount.Rows[i - 1].ItemArray[j].ToString() != " ")
-                                {
-                                    buChanged = true;
-                                }
+                                buChanged = true;
+                            }
+                            else if (dtTierCount.Rows[i].ItemArray[0].ToString() != dtTierCount.Rows[i + 1].ItemArray[0].ToString())
+                            {
+                                buChanged = true;
                             }
                             InsertTextExistingTierExcel(spreadSheet, worksheetPart6, j + 1, (uint)(i + 2), cellData, buChanged);
                         }
@@ -586,10 +602,7 @@ namespace ExcelAppOpenXML
                 Cell cell = InsertCellInWorksheet(ColumnLetter(columns - 1), rows, worksheetPart);
                 cell.DataType = CellValues.InlineString;
                 cell.InlineString = new InlineString() { Text = new Text(cellData) };
-                if (worksheetPart == GetWorksheetPartByName(spreadSheet, "Tier Summary"))
-                {
-                    StyleSheet6.AddBold(spreadSheet, cell, columns, isPage1);
-                }
+                StyleSheet6.AddBold(spreadSheet, cell, columns, isPage1);
                 worksheetPart.Worksheet.Save();
             }
         }

@@ -12,19 +12,10 @@ namespace ExcelAppOpenXML
     {
         public static void AddBold(SpreadsheetDocument document, Cell c, int column, bool buChanged)
         {
-            if (buChanged)
-            {
-                Fills fi = AddFills(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills);
-                AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills);
-                c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
-            }
-            else
-            {
-                Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, column);
-                Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders);
-                AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders);
-                c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
-            }
+            Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, column);
+            Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, buChanged);
+            AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders);
+            c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
         }
 
         static Fonts AddFont(Fonts fs, int col)
@@ -75,9 +66,18 @@ namespace ExcelAppOpenXML
             return fs;
         }
 
-        static Borders AddBorders(Borders borders)
+        static Borders AddBorders(Borders borders, bool buChanged)
         {
             Border border = new Border();
+
+            if (buChanged)
+            {
+                BottomBorder bottomBorder = new BottomBorder() { Style = BorderStyleValues.Thick };
+                Color bottomColor = new Color() { Indexed = (UInt32Value)64U };
+                bottomBorder.Append(bottomColor);
+                border.Append(bottomBorder);
+            }
+
             RightBorder border1 = new RightBorder() { Style = BorderStyleValues.Thin };
             Color color1 = new Color() { Indexed = (UInt32Value)64U };
             border1.Append(color1);
@@ -88,28 +88,9 @@ namespace ExcelAppOpenXML
             return borders;
         }
 
-        static Fills AddFills(Fills fills)
-        {
-            Fill fill1 = new Fill();
-            PatternFill patternFill5 = new PatternFill() { PatternType = PatternValues.Solid };
-            ForegroundColor foregroundColor3 = new ForegroundColor() { Rgb = "d4e3fa" };
-            
-            patternFill5.Append(foregroundColor3);
-            fill1.Append(patternFill5);
-
-            fills.Append(fill1);
-            return fills;
-        }
-
         static void AddCellFormat(CellFormats cf, Fonts fs, Borders bs)
         {
             CellFormat cellFormat2 = new CellFormat(new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center }) { NumberFormatId = 0, FontId = (UInt32)(fs.Elements<Font>().Count() - 1), BorderId = (UInt32)(bs.Elements<Border>().Count() - 1), FormatId = 0, ApplyBorder = true, ApplyFont = true, ApplyAlignment = true };
-            cf.Append(cellFormat2);
-        }
-
-        static void AddCellFormat(CellFormats cf, Fills fills)
-        {
-            CellFormat cellFormat2 = new CellFormat() { FillId = (UInt32)(fills.Elements<Fill>().Count() - 1), ApplyFill = true };
             cf.Append(cellFormat2);
         }
     }
