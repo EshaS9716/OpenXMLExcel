@@ -26,7 +26,7 @@ namespace ExcelAppOpenXML
         public static bool LoadAPI()
         {
             dt = ReadFromApi();
-            if (!AreTablesTheSame(dt))
+            if (!CompareDbs())
             {
                 SendToDb();
                 PopulateDatatables();
@@ -35,30 +35,36 @@ namespace ExcelAppOpenXML
             return true;
         }
 
-        static bool AreTablesTheSame(DataTable tbl1)
+        private static bool CompareDbs()
         {
             try
             {
-                DataTable tbl2 = new DataTable();
-                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("select * from rocket_data_pimcore", dbConn))
+                DataTable tbl = new DataTable();
+                dbConn.Open();
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("APIData", dbConn))
                 {
-                    dbConn.Open();
-                    var mdr = cmd.ExecuteReader();
-                    tbl2.Load(mdr);
-                    dbConn.Close();
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.ExecuteNonQuery();
                 }
-                if (tbl1.Rows.Count != tbl2.Rows.Count || tbl1.Columns.Count != tbl2.Columns.Count)
-                    return false;
 
-                for (int i = 0; i < tbl1.Rows.Count; i++)
+                MySqlConnection connection = new MySqlConnection("user id=esahu;server=walstgpimcore01;database=esha_dev;password=Dev*eSha;AllowLoadLocalInfile=true");
+                connection.Open();
+                var bulkCopy = new MySqlBulkCopy(connection);
+                bulkCopy.DestinationTableName = "rocket_data_api";
+                bulkCopy.WriteToServer(dt);
+                connection.Close();
+
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("checksum table esha_dev.rocket_data_pimcore, esha_dev.rocket_data_api", dbConn))
                 {
-                    for (int c = 0; c < tbl1.Columns.Count; c++)
-                    {
-                        if (!Equals(tbl1.Rows[i][c], tbl2.Rows[i][c]))
-                            return false;
-                    }
+                    tbl.Clear();
+                    tbl.Columns.Add("Table");
+                    tbl.Columns.Add("Checksum");
+                    var mdr = cmd.ExecuteReader();
+                    tbl.Load(mdr);
                 }
-                return true;
+
+                dbConn.Close();
+                return tbl.Rows[0][1].ToString() == tbl.Rows[1][1].ToString();
             }
             catch (Exception ex)
             {
@@ -106,32 +112,6 @@ namespace ExcelAppOpenXML
             }
             return JsonConvert.DeserializeObject<DataTable>(trgArray.ToString());
 
-        }
-
-        private static DataTable Copy(DataTable dt)
-        {
-            var result = from row in dt.AsEnumerable()
-                         orderby row.Field<string>("businessUnit"), row.Field<string>("businessUnitGroup"),
-                         row.Field<string>("productFamily"), row.Field<string>("productGroup")
-                         group row by new
-                         {
-                             bu = row.Field<string>("businessUnit"),
-                             bu_group = row.Field<string>("businessUnitGroup"),
-                             bu_product_family = row.Field<string>("productFamily"),
-                             bu_product_group = row.Field<string>("productGroup"),
-                             product_id = row.Field<string>("productCode"),
-                             rocket_product_name = row.Field<string>("productName"),
-                             engineer_lead = row.Field<string>("owner"),
-                             project_manager = row.Field<string>("productOwnerId"),
-                             finance_manager = row.Field<string>("financeOwnerId")
-                         } into bu
-                         select bu.First();
-            DataTable newDataTable = result.CopyToDataTable();
-            DataView view = new DataView(newDataTable);
-            DataTable selected =
-                    view.ToTable("Selected", false, "businessUnit", "businessUnitGroup", "productFamily",
-                    "productGroup", "productCode", "productName", "owner", "productOwnerId", "financeOwnerId");
-            return selected;
         }
 
         private static void SendToDb()
