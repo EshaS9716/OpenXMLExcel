@@ -34,8 +34,6 @@ namespace ExcelAppOpenXML
                 Export_Data.WriteToExcel();
                 Export_Data.Autofit();
             }
-            //Export_Data.AutofitTiers();
-
 
             using (ZipFile zip = new ZipFile())
             {

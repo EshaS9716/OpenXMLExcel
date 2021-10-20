@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -82,7 +84,8 @@ namespace ExcelAppOpenXML
             }
             WriteToExcel1();
             WriteToExcel5();
-            WriteToExcel6();
+            //WriteToExcel6();
+            CopyDataTableToExcel();
         }
 
         private static void WriteToExcel1()
@@ -277,6 +280,138 @@ namespace ExcelAppOpenXML
             }
         }
 
+        public static void CopyDataTableToExcel()
+        {
+            try
+            {
+                File.Copy(_Default.TierSourcePath, fileTierPath, true);
+                DataTable table = GetDataFromAPI.dataTable4;
+                using (var workbook = SpreadsheetDocument.Open(fileTierPath, true))
+                {
+                    var sheetPart = GetWorksheetPartByName(workbook, "Tier Summary");
+                    var sheetData = new SheetData();
+                    sheetPart.Worksheet = new Worksheet(sheetData);
+                    Sheets sheets = workbook.WorkbookPart.Workbook.GetFirstChild<Sheets>();
+
+                    //Adding Filter
+                    string range = "A1:H" + (table.Rows.Count + 1);
+                    AutoFilter autoFilter = new AutoFilter() { Reference = range };
+                    sheetPart.Worksheet.Append(autoFilter);                    
+
+                    //Adding header rows
+                    Row headerRow = new Row();
+                    List<String> lt_columns = new List<string>();
+                    foreach (DataColumn column in table.Columns)
+                    {
+                        lt_columns.Add(column.ColumnName);
+
+                        Cell cell = new Cell();
+                        cell.DataType = CellValues.String;
+                        cell.CellValue = new CellValue(column.ColumnName);
+                        headerRow.AppendChild(cell);
+                        StylesSheet6Header.AddBold(workbook, cell, lt_columns.Count);
+                    }
+                    sheetData.AppendChild(headerRow);
+
+                    //Adding data
+                    uint row = 0;
+                    foreach (DataRow dsrow in table.Rows)
+                    {
+                        Row newRow = new Row() { RowIndex = row + 2 };
+                        bool buChanged = IsBuChanged((int)row);
+                        row++; int column = 0;
+                        foreach (String col in lt_columns)
+                        {
+                            Cell cell = new Cell();
+                            cell.DataType = CellValues.String;
+                            cell.CellValue = new CellValue(dsrow[col].ToString());
+                            newRow.AppendChild(cell);
+                            StyleSheet6.AddBold(workbook, cell, column + 1, buChanged);
+                            column++;
+                        }
+                        sheetData.AppendChild(newRow);
+                    }
+
+                    //Calculating custom column width
+                    Columns cols = new Columns();
+                    int Excel_column = 0;
+                    for (int col = 0; col < table.Columns.Count; col++)
+                    {
+                        double max_width = 10.5f;
+                        string longest_string;
+                        if (col == 0) { longest_string = "--Tier--"; }
+                        else if (col == 1) { longest_string = "---Tier Description---"; }
+                        else if (col == 2) { longest_string = "---Pcode---"; }
+                        else
+                        {
+                            longest_string = table.AsEnumerable()
+                           .Select(r => r[col].ToString())
+                           .OrderByDescending(st => st.Length).FirstOrDefault();
+                        }
+
+                        double cell_width = GetWidth(new System.Drawing.Font("Calibri", GetFontSize(col)), longest_string);
+
+                        if (cell_width > max_width)
+                        {
+                            max_width = cell_width;
+                        }
+                        if (col == 0) 
+                        {
+                            Excel_column = 1;
+                        }
+                        Column c = new Column() { Min = Convert.ToUInt32(Excel_column), Max = Convert.ToUInt32(Excel_column), Width = max_width, CustomWidth = true };
+                        cols.Append(c);
+
+                        Excel_column++;
+                    }
+
+                    var sheetdata = sheetPart.Worksheet.GetFirstChild<SheetData>();
+                    sheetPart.Worksheet.InsertBefore(cols, sheetdata);
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogging.SendErrorToText(ex);
+                throw ex;
+            }
+        }
+
+        #region HelperMethods
+        private static float GetFontSize(int col)
+        {
+            switch (col)
+            {
+                case 0: return 12.5f;
+                case 1: case 2: case 3: return 11f;
+                default: return 10f;
+            }
+        }
+
+        private static double GetWidth(System.Drawing.Font stringFont, string text)
+        {
+            Size textSize = TextRenderer.MeasureText(text, stringFont);
+            double width = (double)(((textSize.Width / (double)7) * 256) - (128 / 7)) / 256;
+            width = (double)decimal.Round((decimal)width + 0.2M, 2);
+
+            return width;
+        }
+
+        private static bool IsBuChanged(int i)
+        {
+            bool buChanged = false;
+            DataTable table = GetDataFromAPI.dataTable4;
+
+            if (table.Rows.Count == i + 1)
+            {
+                buChanged = true;
+            }
+            else if (table.Rows[i].ItemArray[0].ToString() != table.Rows[i + 1].ItemArray[0].ToString())
+            {
+                buChanged = true;
+            }
+            return buChanged;
+        }
+
         public static void Autofit()
         {
             try
@@ -303,35 +438,6 @@ namespace ExcelAppOpenXML
                 throw ex;
             }
         }
-
-        public static void AutofitTiers()
-        {
-            try
-            {
-                SpreadsheetInfo.SetLicense("FREE-LIMITED-KEY");
-                SpreadsheetInfo.FreeLimitReached += (sender, e) => e.FreeLimitReachedAction = FreeLimitReachedAction.ContinueAsTrial;
-
-                var workbook = ExcelFile.Load(fileTierPath);
-
-                var worksheet = workbook.Worksheets[0];
-                for (int j = 0; j < 1; j++)
-                {
-                    worksheet = workbook.Worksheets[j];
-                    int columnCount = worksheet.CalculateMaxUsedColumns();
-                    for (int i = 0; i < columnCount; i++)
-                        worksheet.Columns[i].AutoFit(1, worksheet.Rows[0], worksheet.Rows[worksheet.Rows.Count - 1]);
-                }
-
-                workbook.Save(fileTierPath);
-            }
-            catch (Exception ex)
-            {
-                ErrorLogging.SendErrorToText(ex);
-                throw ex;
-            }
-        }
-
-        #region HelperMethods
 
         static Hyperlink AddLink(Worksheet worksheet, int column, int rowSource)
         {

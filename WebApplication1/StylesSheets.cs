@@ -8,6 +8,63 @@ using System.Web;
 
 namespace ExcelAppOpenXML
 {
+    public static class StylesSheet6Header
+    {
+        public static void AddBold(SpreadsheetDocument document, Cell c, int column)
+        {
+            if (IsBkgColor(column))
+            {
+                Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts);
+                Fills fi = AddFills(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills);
+                AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills);
+                c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
+            }
+            else
+            {
+                Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts);
+                AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts);
+                c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
+            }
+        }
+
+        static bool IsBkgColor(int col)
+        {
+            switch (col)
+            {
+                case 1: case 2: case 3: case 4: return true;
+                default: return false;
+            }
+        }
+
+        static Fonts AddFont(Fonts fs)
+        {
+            Font font2 = new Font(new Bold(), new FontSize() { Val = 10D }, new FontName() { Val = "Calibri Light" });
+            fs.Append(font2);
+            return fs;
+        }
+
+        static Fills AddFills(Fills fills)
+        {
+            Fill fill1 = new Fill();
+            PatternFill patternFill5 = new PatternFill(new ForegroundColor() { Rgb = "d4e3fa" }) { PatternType = PatternValues.Solid };
+            fill1.Append(patternFill5);
+            fills.Append(fill1);
+            return fills;
+        }
+
+        static void AddCellFormat(CellFormats cf, Fonts fs, Fills fills)
+        {
+            CellFormat cellFormat2 = new CellFormat(new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Bottom, WrapText = true }) { NumberFormatId = 0, FontId = (UInt32)(fs.Elements<Font>().Count() - 1), FillId = (UInt32)(fills.Elements<Fill>().Count() - 1), FormatId = 0, ApplyFont = true, ApplyAlignment = true, ApplyFill = true };
+            cf.Append(cellFormat2);
+        }
+
+        static void AddCellFormat(CellFormats cf, Fonts fs)
+        {
+            CellFormat cellFormat2 = new CellFormat(new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Bottom, WrapText = true }) { NumberFormatId = 0, FontId = (UInt32)(fs.Elements<Font>().Count() - 1), FormatId = 0, ApplyFont = true, ApplyAlignment = true };
+            cf.Append(cellFormat2);
+        }
+    }
+
     public static class StyleSheet6
     {
         public static void AddBold(SpreadsheetDocument document, Cell c, int column, bool buChanged)
@@ -101,9 +158,9 @@ namespace ExcelAppOpenXML
             if (IsBkgColor(column))
             {
                 Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, column);
-                Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, buChanged);
                 Fills fi = AddFills(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills, column);
-                AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills);
+                Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, buChanged);
+                AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders);
                 c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
             }
             else
@@ -226,7 +283,7 @@ namespace ExcelAppOpenXML
             return borders;
         }
 
-        static void AddCellFormat(CellFormats cf, Fonts fs, Borders bs, Fills fills)
+        static void AddCellFormat(CellFormats cf, Fonts fs, Fills fills, Borders bs)
         {
             CellFormat cellFormat2 = new CellFormat(new Alignment() { Horizontal = HorizontalAlignmentValues.Center, Vertical = VerticalAlignmentValues.Center }) { NumberFormatId = 0, FontId = (UInt32)(fs.Elements<Font>().Count() - 1), BorderId = (UInt32)(bs.Elements<Border>().Count() - 1), FillId = (UInt32)(fills.Elements<Fill>().Count() - 1), FormatId = 0, ApplyBorder = true, ApplyFont = true, ApplyAlignment = true, ApplyFill = true};
             cf.Append(cellFormat2);
