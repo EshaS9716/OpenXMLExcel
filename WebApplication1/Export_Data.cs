@@ -84,7 +84,6 @@ namespace ExcelAppOpenXML
             }
             WriteToExcel1();
             WriteToExcel5();
-            //WriteToExcel6();
             CopyDataTableToExcel();
         }
 
@@ -243,43 +242,6 @@ namespace ExcelAppOpenXML
             }
         }
 
-        public static void WriteToExcel6()
-        {
-            int i, j;
-            try
-            {
-                File.Copy(_Default.TierSourcePath, fileTierPath, true);
-                DataTable dtTierCount = GetDataFromAPI.dataTable4;
-
-                using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(fileTierPath, true))
-                {
-                    WorksheetPart worksheetPart6 = GetWorksheetPartByName(spreadSheet, "Tier Summary");
-                    for (i = 0; i <= dtTierCount.Rows.Count - 1; i++)
-                    {
-                        for (j = 0; j <= dtTierCount.Columns.Count - 1; j++)
-                        {
-                            string cellData = dtTierCount.Rows[i].ItemArray[j].ToString();
-                            bool buChanged = false;
-                            if (dtTierCount.Rows.Count == i + 1)
-                            {
-                                buChanged = true;
-                            }
-                            else if (dtTierCount.Rows[i].ItemArray[0].ToString() != dtTierCount.Rows[i + 1].ItemArray[0].ToString())
-                            {
-                                buChanged = true;
-                            }
-                            InsertTextExistingTierExcel(spreadSheet, worksheetPart6, j + 1, (uint)(i + 2), cellData, buChanged);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ErrorLogging.SendErrorToText(ex);
-                throw ex;
-            }
-        }
-
         public static void CopyDataTableToExcel()
         {
             try
@@ -293,12 +255,13 @@ namespace ExcelAppOpenXML
                     sheetPart.Worksheet = new Worksheet(sheetData);
                     Sheets sheets = workbook.WorkbookPart.Workbook.GetFirstChild<Sheets>();
 
-                    //Adding Filter
+                    #region Adding Filter
                     string range = "A1:H" + (table.Rows.Count + 1);
                     AutoFilter autoFilter = new AutoFilter() { Reference = range };
-                    sheetPart.Worksheet.Append(autoFilter);                    
+                    sheetPart.Worksheet.Append(autoFilter);
+                    #endregion
 
-                    //Adding header rows
+                    #region Adding header rows
                     Row headerRow = new Row();
                     List<String> lt_columns = new List<string>();
                     foreach (DataColumn column in table.Columns)
@@ -312,8 +275,9 @@ namespace ExcelAppOpenXML
                         StylesSheet6Header.AddBold(workbook, cell, lt_columns.Count);
                     }
                     sheetData.AppendChild(headerRow);
+                    #endregion
 
-                    //Adding data
+                    #region Adding data
                     uint row = 0;
                     foreach (DataRow dsrow in table.Rows)
                     {
@@ -331,8 +295,9 @@ namespace ExcelAppOpenXML
                         }
                         sheetData.AppendChild(newRow);
                     }
+                    #endregion
 
-                    //Calculating custom column width
+                    #region Calculating custom column width
                     Columns cols = new Columns();
                     int Excel_column = 0;
                     for (int col = 0; col < table.Columns.Count; col++)
@@ -340,7 +305,7 @@ namespace ExcelAppOpenXML
                         double max_width = 10.5f;
                         string longest_string;
                         if (col == 0) { longest_string = "--Tier--"; }
-                        else if (col == 1) { longest_string = "---Tier Description---"; }
+                        else if (col == 1) { longest_string = "--Tier Description--"; }
                         else if (col == 2) { longest_string = "---Pcode---"; }
                         else
                         {
@@ -367,6 +332,19 @@ namespace ExcelAppOpenXML
 
                     var sheetdata = sheetPart.Worksheet.GetFirstChild<SheetData>();
                     sheetPart.Worksheet.InsertBefore(cols, sheetdata);
+                    #endregion
+
+                    #region Freeze Panes and Zoom level
+                    SheetViews sheetViews1 = new SheetViews();
+                    SheetView sheetView1 = new SheetView() { TabSelected = true, WorkbookViewId = (UInt32Value)0U };
+                    Pane pane1 = new Pane() { VerticalSplit = 1D, TopLeftCell = "A2", ActivePane = PaneValues.BottomLeft, State = PaneStateValues.Frozen };
+                    sheetView1.Append(pane1);
+                    sheetView1.ZoomScale = 77;
+                    sheetViews1.Append(sheetView1);
+                    sheetPart.Worksheet.InsertBefore(sheetViews1, cols);
+                    #endregion
+
+                    _Default.WasImportSuccessful = true;
                 }
             }
             catch (Exception ex)

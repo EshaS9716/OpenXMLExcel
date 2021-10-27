@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Web;
 using context = System.Web.HttpContext;
 
 namespace ExcelAppOpenXML
@@ -19,6 +16,7 @@ namespace ExcelAppOpenXML
             Errormsg = ex.GetType().Name.ToString();
             extype = ex.GetType().ToString();
             ErrorLocation = ex.Message.ToString();
+            _Default.WasImportSuccessful = false;
 
             try
             {

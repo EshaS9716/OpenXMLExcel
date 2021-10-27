@@ -3,10 +3,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Web;
 
 namespace ExcelAppOpenXML
 {
@@ -54,7 +52,7 @@ namespace ExcelAppOpenXML
                 bulkCopy.WriteToServer(dt);
                 connection.Close();
 
-                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("checksum table esha_dev.rocket_data_pimcore, esha_dev.rocket_data_api", dbConn))
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("checksum table esha_dev.rocket_data_pimcore_master, esha_dev.rocket_data_api", dbConn))
                 {
                     tbl.Clear();
                     tbl.Columns.Add("Table");
@@ -196,6 +194,26 @@ namespace ExcelAppOpenXML
                     dataTable4.Load(mdr);
                 }
 
+                dbConn.Close();
+            }
+            catch (Exception ex)
+            {
+                ErrorLogging.SendErrorToText(ex);
+                throw ex;
+            }
+        }
+
+        public static void CopyToMaster()
+        {
+            var sp_Insert = "CopyToMaster";
+            try
+            {
+                dbConn.Open();
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Insert, dbConn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.ExecuteNonQuery();
+                }
                 dbConn.Close();
             }
             catch (Exception ex)

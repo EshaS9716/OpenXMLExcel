@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.UI;
-using System.Web.UI.WebControls;
-using System.IO;
 using Ionic.Zip;
 
 namespace ExcelAppOpenXML
@@ -15,6 +10,8 @@ namespace ExcelAppOpenXML
         public static string TierSourcePath { get; set; }
         public static string DesPath { get; set; }
         public static string TierDesPath { get; set; }
+        public static bool WasImportSuccessful { get; set; }
+
         protected void Page_Load(object sender, EventArgs e)
         {
             SourcePath = Server.MapPath("~/Template/MyDataTemplate.xlsx");
@@ -29,10 +26,15 @@ namespace ExcelAppOpenXML
 
         protected void DownLoadExcel()
         {
+            WasImportSuccessful = false;
             if (!GetDataFromAPI.LoadAPI())
             {
                 Export_Data.WriteToExcel();
                 Export_Data.Autofit();
+            }
+            if (WasImportSuccessful)
+            {
+                GetDataFromAPI.CopyToMaster();
             }
 
             using (ZipFile zip = new ZipFile())
