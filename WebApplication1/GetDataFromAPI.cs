@@ -16,10 +16,10 @@ namespace ExcelAppOpenXML
         public static DataTable dataTable3 = new DataTable();
         public static DataTable dataTable4 = new DataTable();
 
-        public static MySql.Data.MySqlClient.MySqlConnection dbConn = new MySql.Data.MySqlClient.MySqlConnection("user id=esahu;server=walstgpimcore01;database=esha_dev;password=Dev*eSha");
-        public static string baseUrl = "http://walstgpim01.rocketsoftware.com/api/productmasterlisting";
+        public static MySql.Data.MySqlClient.MySqlConnection dbConn = new MySql.Data.MySqlClient.MySqlConnection("user id=esahu;server=walstgpimcore01;database=rocket_hierarchy;password=Dev*eSha");
+        public static string baseUrl = "http://walprdpimcore01.rocketsoftware.com/api/productmasterlisting";
         public static string headerName = "token";
-        public static string headerValue = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMSIsImV4cCI6MzMxNTg2MjQ0NDUsImlzcyI6IndhbHN0Z3BpbTAxLnJvY2tldHNvZnR3YXJlLmNvbSIsImlhdCI6MTYyMjYyNDQ0NX0.Ttf-dGsTZJibCtvREKwwhtYxggL8npInaiCQZDvkNQc";
+        public static string headerValue = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiMDEiLCJleHAiOjMzMTY0NTg3NzgyLCJpc3MiOiJ3YWxwcmRwaW1jb3JlMDEucm9ja2V0c29mdHdhcmUuY29tIiwiaWF0IjoxNjI4NTg3NzgyfQ.xjqnMHUcMkuFnmgVY3y6EOsNsVMyELOQVI1XZA2oRdE";
 
         public static bool LoadAPI()
         {
@@ -45,14 +45,14 @@ namespace ExcelAppOpenXML
                     cmd.ExecuteNonQuery();
                 }
 
-                MySqlConnection connection = new MySqlConnection("user id=esahu;server=walstgpimcore01;database=esha_dev;password=Dev*eSha;AllowLoadLocalInfile=true");
+                MySqlConnection connection = new MySqlConnection("user id=esahu;server=walstgpimcore01;database=rocket_hierarchy;password=Dev*eSha;AllowLoadLocalInfile=true");
                 connection.Open();
                 var bulkCopy = new MySqlBulkCopy(connection);
                 bulkCopy.DestinationTableName = "rocket_data_api";
                 bulkCopy.WriteToServer(dt);
                 connection.Close();
 
-                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("checksum table esha_dev.rocket_data_pimcore_master, esha_dev.rocket_data_api", dbConn))
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand("checksum table rocket_hierarchy.rocket_data_pimcore_master, rocket_hierarchy.rocket_data_api", dbConn))
                 {
                     tbl.Clear();
                     tbl.Columns.Add("Table");
@@ -124,7 +124,7 @@ namespace ExcelAppOpenXML
                     dbConn.Close();
                 }
 
-                MySqlConnector.MySqlConnection connection = new MySqlConnector.MySqlConnection("user id=esahu;server=walstgpimcore01;database=esha_dev;password=Dev*eSha;AllowLoadLocalInfile=true");
+                MySqlConnector.MySqlConnection connection = new MySqlConnector.MySqlConnection("user id=esahu;server=walstgpimcore01;database=rocket_hierarchy;password=Dev*eSha;AllowLoadLocalInfile=true");
                 connection.Open();
                 var bulkCopy = new MySqlBulkCopy(connection);
                 bulkCopy.DestinationTableName = "rocket_data_pimcore";
