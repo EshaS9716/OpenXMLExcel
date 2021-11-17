@@ -222,5 +222,14 @@ namespace ExcelAppOpenXML
                 throw ex;
             }
         }
+
+        public static void DisposeUsedResources()
+        {
+            dt = null;
+            dataTable1 = null;
+            dataTable2 = null;
+            dataTable3 = null;
+            dataTable4 = null;
+        }
     }
 }

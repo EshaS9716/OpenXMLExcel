@@ -36,6 +36,7 @@ namespace ExcelAppOpenXML
             {
                 GetDataFromAPI.CopyToMaster();
             }
+            GetDataFromAPI.DisposeUsedResources();
 
             using (ZipFile zip = new ZipFile())
             {
