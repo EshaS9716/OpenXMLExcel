@@ -83,7 +83,8 @@ namespace ExcelAppOpenXML
                 throw ex;
             }
             WriteToExcel1();
-            WriteToExcel5();
+            //WriteToExcel5();
+            CopyDataTableToExcelSheet5();
             CopyDataTableToExcel();
         }
 
@@ -242,6 +243,117 @@ namespace ExcelAppOpenXML
             }
         }
 
+        public static void CopyDataTableToExcelSheet5()
+        {
+            try
+            {
+                DataTable table = GetDataFromAPI.dataTable3;
+                using (var workbook = SpreadsheetDocument.Open(filePath, true))
+                {
+                    var sheetPart = GetWorksheetPartByName(workbook, "Product Summary");
+                    var sheetData = new SheetData();
+                    sheetPart.Worksheet = new Worksheet(sheetData);
+                    Sheets sheets = workbook.WorkbookPart.Workbook.GetFirstChild<Sheets>();
+
+                    #region Adding Filter
+                    string range = "A1:V" + (table.Rows.Count + 1);
+                    AutoFilter autoFilter = new AutoFilter() { Reference = range };
+                    sheetPart.Worksheet.Append(autoFilter);
+                    #endregion
+
+                    #region Adding header rows
+                    Row headerRow = new Row();
+                    List<String> lt_columns = new List<string>();
+                    foreach (DataColumn column in table.Columns)
+                    {
+                        lt_columns.Add(column.ColumnName);
+
+                        Cell cell = new Cell();
+                        cell.DataType = CellValues.String;
+                        cell.CellValue = new CellValue(column.ColumnName);
+                        headerRow.AppendChild(cell);
+                        StylesSheet6Header.AddBold(workbook, cell, lt_columns.Count, true);
+                    }
+                    sheetData.AppendChild(headerRow);
+                    #endregion
+
+                    #region Adding data
+                    uint row = 0;
+                    foreach (DataRow dsrow in table.Rows)
+                    {
+                        Row newRow = new Row() { RowIndex = row + 2 };
+                        bool buChanged = IsBuChanged((int)row, true);
+                        row++; int column = 0;
+                        foreach (String col in lt_columns)
+                        {
+                            Cell cell = new Cell();
+                            cell.DataType = CellValues.String;
+                            cell.CellValue = new CellValue(dsrow[col].ToString());
+                            newRow.AppendChild(cell);
+                            StylesSheet5.AddBold(workbook, cell, column + 1, buChanged);
+                            column++;
+                        }
+                        sheetData.AppendChild(newRow);
+                    }
+                    #endregion
+
+                    #region Calculating custom column width
+                    Columns cols = new Columns();
+                    int Excel_column = 0;
+                    for (int col = 0; col < table.Columns.Count; col++)
+                    {
+                        double max_width = 10.5f;
+                        string longest_string;
+                        if (col == 0) { longest_string = "-Database & Connectivity--"; }
+                        else if (col == 6 || col == 13) { longest_string = ""; }
+                        else if (col >= 4 && col <= 11) { longest_string = "----Count----"; }
+                        else if (col == 12) { longest_string = "----(unassigned)----"; }
+                        else if (col >= 14 && col <= 17) { longest_string = "-----SKU Count----"; }
+                        else
+                        {
+                            longest_string = table.AsEnumerable()
+                           .Select(r => r[col].ToString())
+                           .OrderByDescending(st => st.Length).FirstOrDefault();
+                        }
+
+                        double cell_width = GetWidth(new System.Drawing.Font("Calibri", GetFontSize(col)), longest_string);
+
+                        if (cell_width > max_width)
+                        {
+                            max_width = cell_width;
+                        }
+                        if (col == 0)
+                        {
+                            Excel_column = 1;
+                        }
+                        Column c = new Column() { Min = Convert.ToUInt32(Excel_column), Max = Convert.ToUInt32(Excel_column), Width = max_width + 2.5, CustomWidth = true };
+                        cols.Append(c);
+
+                        Excel_column++;
+                    }
+
+                    var sheetdata = sheetPart.Worksheet.GetFirstChild<SheetData>();
+                    sheetPart.Worksheet.InsertBefore(cols, sheetdata);
+                    #endregion
+
+                    #region Freeze Panes and Zoom level
+                    SheetViews sheetViews1 = new SheetViews();
+                    SheetView sheetView1 = new SheetView() { TabSelected = true, WorkbookViewId = (UInt32Value)0U };
+                    Pane pane1 = new Pane() { VerticalSplit = 1D, TopLeftCell = "A2", ActivePane = PaneValues.BottomLeft, State = PaneStateValues.Frozen };
+                    sheetView1.Append(pane1);
+                    sheetView1.ZoomScale = 68;
+                    sheetViews1.Append(sheetView1);
+                    sheetPart.Worksheet.InsertBefore(sheetViews1, cols);
+                    #endregion
+                }
+            }
+            catch (Exception ex)
+            {
+                ErrorLogging.SendErrorToText(ex);
+                throw ex;
+            }
+        }
+
         public static void CopyDataTableToExcel()
         {
             try
@@ -272,7 +384,7 @@ namespace ExcelAppOpenXML
                         cell.DataType = CellValues.String;
                         cell.CellValue = new CellValue(column.ColumnName);
                         headerRow.AppendChild(cell);
-                        StylesSheet6Header.AddBold(workbook, cell, lt_columns.Count);
+                        StylesSheet6Header.AddBold(workbook, cell, lt_columns.Count, false);
                     }
                     sheetData.AppendChild(headerRow);
                     #endregion
@@ -282,7 +394,7 @@ namespace ExcelAppOpenXML
                     foreach (DataRow dsrow in table.Rows)
                     {
                         Row newRow = new Row() { RowIndex = row + 2 };
-                        bool buChanged = IsBuChanged((int)row);
+                        bool buChanged = IsBuChanged((int)row, false);
                         row++; int column = 0;
                         foreach (String col in lt_columns)
                         {
@@ -374,10 +486,17 @@ namespace ExcelAppOpenXML
             return width;
         }
 
-        private static bool IsBuChanged(int i)
+        private static bool IsBuChanged(int i, bool isProductHierarchy)
         {
-            bool buChanged = false;
-            DataTable table = GetDataFromAPI.dataTable4;
+            bool buChanged = false; DataTable table;
+            if (isProductHierarchy)
+            {
+                table = GetDataFromAPI.dataTable3;
+            }
+            else
+            {
+                table = GetDataFromAPI.dataTable4;
+            }
 
             if (table.Rows.Count == i + 1)
             {
@@ -400,7 +519,7 @@ namespace ExcelAppOpenXML
                 var workbook = ExcelFile.Load(filePath);
 
                 var worksheet = workbook.Worksheets[0];
-                for (int j = 0; j < 5; j++)
+                for (int j = 0; j < 4; j++)
                 {
                     worksheet = workbook.Worksheets[j];
                     int columnCount = worksheet.CalculateMaxUsedColumns();

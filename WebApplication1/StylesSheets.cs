@@ -10,9 +10,9 @@ namespace ExcelAppOpenXML
 {
     public static class StylesSheet6Header
     {
-        public static void AddBold(SpreadsheetDocument document, Cell c, int column)
+        public static void AddBold(SpreadsheetDocument document, Cell c, int column, bool isProductHierarchy)
         {
-            if (IsBkgColor(column))
+            if (IsBkgColor(column, isProductHierarchy))
             {
                 Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts);
                 Fills fi = AddFills(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills);
@@ -27,12 +27,29 @@ namespace ExcelAppOpenXML
             }
         }
 
-        static bool IsBkgColor(int col)
+        static bool IsBkgColor(int col, bool isProductHierarchy)
         {
-            switch (col)
+            if (isProductHierarchy)
             {
-                case 1: case 2: case 3: case 4: return true;
-                default: return false;
+                if (col == 1 || col == 2 || col == 3 || col == 4)
+                {
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (col == 1 || col == 2 || col == 3 || col == 4)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
 
