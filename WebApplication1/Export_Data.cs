@@ -237,7 +237,7 @@ namespace ExcelAppOpenXML
                         cell.DataType = CellValues.String;
                         cell.CellValue = new CellValue(column.ColumnName);
                         headerRow.AppendChild(cell);
-                        //StylesSheet6Header.AddBold(workbook, cell, lt_columns.Count, true);
+                        StylesSheet6Header.AddBold(workbook, cell, lt_columns.Count, true);
                     }
                     sheetData.AppendChild(headerRow);
                     #endregion
@@ -255,7 +255,7 @@ namespace ExcelAppOpenXML
                             cell.DataType = CellValues.String;
                             cell.CellValue = new CellValue(dsrow[col].ToString());
                             newRow.AppendChild(cell);
-                            //StylesSheet5.AddBold(workbook, cell, column + 1, buChanged);
+                            StylesSheet5.AddBold(workbook, cell, column + 1, buChanged);
                             column++;
                         }
                         sheetData.AppendChild(newRow);
@@ -765,11 +765,7 @@ namespace ExcelAppOpenXML
                 Cell cell = InsertCellInWorksheet(ColumnLetter(columns - 1), rows, worksheetPart);
                 cell.DataType = CellValues.InlineString;
                 cell.InlineString = new InlineString() { Text = new Text(cellData) };
-                if (worksheetPart == GetWorksheetPartByName(spreadSheet, "Product Summary"))
-                {
-                    //StylesSheet5.AddBold(spreadSheet, cell, columns, isPage1);
-                }
-                else if (rows == 7 && !isPage1)
+                if (rows == 7 && !isPage1)
                 {
                     StylesSheet2.AddBold(spreadSheet, cell, 7);
                 }
