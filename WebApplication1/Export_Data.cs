@@ -82,13 +82,14 @@ namespace ExcelAppOpenXML
                 ErrorLogging.SendErrorToText(ex);
                 throw ex;
             }
-            WriteToExcel1();
-            //WriteToExcel5();
-            CopyDataTableToExcelSheet5();
-            CopyDataTableToExcel();
+            WriteToExcelHierarchy();
+            Autofit();
+            WriteToProductSummary();
+            WriteToTierSummary();
+            UngroupSheets();
         }
 
-        private static void WriteToExcel1()
+        private static void WriteToExcelHierarchy()
         {
             try
             {
@@ -207,43 +208,7 @@ namespace ExcelAppOpenXML
             }
         }
 
-        public static void WriteToExcel5()
-        {
-            int i, j;
-            try
-            {
-                DataTable dtCount = GetDataFromAPI.dataTable3;
-
-                using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
-                {
-                    WorksheetPart worksheetPart5 = GetWorksheetPartByName(spreadSheet, "Product Summary");
-                    for (i = 0; i <= dtCount.Rows.Count - 1; i++)
-                    {
-                        for (j = 0; j <= dtCount.Columns.Count - 1; j++)
-                        {
-                            string cellData = dtCount.Rows[i].ItemArray[j].ToString();
-                            bool buChanged = false;
-                            if (dtCount.Rows.Count == i + 1)
-                            {
-                                buChanged = true;
-                            }
-                            else if (dtCount.Rows[i].ItemArray[0].ToString() != dtCount.Rows[i + 1].ItemArray[0].ToString())
-                            {
-                                buChanged = true;
-                            }
-                            InsertTextExistingExcel(spreadSheet, worksheetPart5, j + 1, (uint)(i + 2), cellData, buChanged);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                ErrorLogging.SendErrorToText(ex);
-                throw ex;
-            }
-        }
-
-        public static void CopyDataTableToExcelSheet5()
+        public static void WriteToProductSummary()
         {
             try
             {
@@ -272,7 +237,7 @@ namespace ExcelAppOpenXML
                         cell.DataType = CellValues.String;
                         cell.CellValue = new CellValue(column.ColumnName);
                         headerRow.AppendChild(cell);
-                        StylesSheet6Header.AddBold(workbook, cell, lt_columns.Count, true);
+                        //StylesSheet6Header.AddBold(workbook, cell, lt_columns.Count, true);
                     }
                     sheetData.AppendChild(headerRow);
                     #endregion
@@ -290,7 +255,7 @@ namespace ExcelAppOpenXML
                             cell.DataType = CellValues.String;
                             cell.CellValue = new CellValue(dsrow[col].ToString());
                             newRow.AppendChild(cell);
-                            StylesSheet5.AddBold(workbook, cell, column + 1, buChanged);
+                            //StylesSheet5.AddBold(workbook, cell, column + 1, buChanged);
                             column++;
                         }
                         sheetData.AppendChild(newRow);
@@ -302,7 +267,7 @@ namespace ExcelAppOpenXML
                     int Excel_column = 0;
                     for (int col = 0; col < table.Columns.Count; col++)
                     {
-                        double max_width = 10.5f;
+                        double max_width = 1.5f;
                         string longest_string;
                         if (col == 0) { longest_string = "-Database & Connectivity--"; }
                         else if (col == 6 || col == 13) { longest_string = ""; }
@@ -354,7 +319,7 @@ namespace ExcelAppOpenXML
             }
         }
 
-        public static void CopyDataTableToExcel()
+        public static void WriteToTierSummary()
         {
             try
             {
@@ -463,6 +428,20 @@ namespace ExcelAppOpenXML
             {
                 ErrorLogging.SendErrorToText(ex);
                 throw ex;
+            }
+        }
+
+        public static void UngroupSheets()
+        {
+            using (var workbook = SpreadsheetDocument.Open(filePath, true))
+            {
+                foreach (Sheet sht in workbook.WorkbookPart.Workbook.Descendants<Sheet>())
+                {
+                    WorksheetPart wrkShtPart = (WorksheetPart)workbook.WorkbookPart.GetPartById(sht.Id);
+                    SheetViews shtViews = wrkShtPart.Worksheet.GetFirstChild<SheetViews>();
+                    SheetView shtView = shtViews.GetFirstChild<SheetView>();
+                    shtView.TabSelected = null;
+                }
             }
         }
 
@@ -788,7 +767,7 @@ namespace ExcelAppOpenXML
                 cell.InlineString = new InlineString() { Text = new Text(cellData) };
                 if (worksheetPart == GetWorksheetPartByName(spreadSheet, "Product Summary"))
                 {
-                    StylesSheet5.AddBold(spreadSheet, cell, columns, isPage1);
+                    //StylesSheet5.AddBold(spreadSheet, cell, columns, isPage1);
                 }
                 else if (rows == 7 && !isPage1)
                 {

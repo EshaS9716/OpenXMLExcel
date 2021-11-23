@@ -30,7 +30,6 @@ namespace ExcelAppOpenXML
             if (!GetDataFromAPI.LoadAPI())
             {
                 Export_Data.WriteToExcel();
-                Export_Data.Autofit();
             }
             if (WasImportSuccessful)
             {
