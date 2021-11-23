@@ -152,11 +152,6 @@ namespace ExcelAppOpenXML
                 border.Append(bottomBorder);
             }
 
-            //RightBorder border1 = new RightBorder() { Style = BorderStyleValues.Thin };
-            //Color color1 = new Color() { Indexed = (UInt32Value)64U };
-            //border1.Append(color1);
-            //border.Append(border1);
-
             borders.Append(border);
             return borders;
         }

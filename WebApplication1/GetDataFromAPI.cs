@@ -60,14 +60,16 @@ namespace ExcelAppOpenXML
                     var mdr = cmd.ExecuteReader();
                     tbl.Load(mdr);
                 }
-
-                dbConn.Close();
                 return tbl.Rows[0][1].ToString() == tbl.Rows[1][1].ToString();
             }
             catch (Exception ex)
             {
                 ErrorLogging.SendErrorToText(ex);
                 throw ex;
+            }
+            finally
+            {
+                dbConn.Close();
             }
         }
 
@@ -121,7 +123,6 @@ namespace ExcelAppOpenXML
                     cmd.CommandType = CommandType.StoredProcedure;
                     dbConn.Open();
                     cmd.ExecuteNonQuery();
-                    dbConn.Close();
                 }
 
                 MySqlConnector.MySqlConnection connection = new MySqlConnector.MySqlConnection("user id=esahu;server=walstgpimcore01;database=rocket_hierarchy_stage;password=Dev*eSha;AllowLoadLocalInfile=true");
@@ -135,6 +136,10 @@ namespace ExcelAppOpenXML
             {
                 ErrorLogging.SendErrorToText(ex);
                 throw ex;
+            }
+            finally
+            {
+                dbConn.Close();
             }
         }
 
@@ -176,30 +181,48 @@ namespace ExcelAppOpenXML
                 using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(hierarchy, dbConn))
                 {
                     var mdr = cmd.ExecuteReader();
+                    if (dataTable1 == null)
+                    {
+                        dataTable1 = new DataTable();
+                    }
                     dataTable1.Load(mdr);
                 }
                 using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(pCode, dbConn))
                 {
                     var mdr = cmd.ExecuteReader();
+                    if (dataTable2 == null)
+                    {
+                        dataTable2 = new DataTable();
+                    }
                     dataTable2.Load(mdr);
                 }
                 using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(pSummary, dbConn))
                 {
                     var mdr = cmd.ExecuteReader();
+                    if (dataTable3 == null)
+                    {
+                        dataTable3 = new DataTable();
+                    }
                     dataTable3.Load(mdr);
                 }
                 using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(tSummary, dbConn))
                 {
                     var mdr = cmd.ExecuteReader();
+                    if (dataTable4 == null)
+                    {
+                        dataTable4 = new DataTable();
+                    }
                     dataTable4.Load(mdr);
                 }
-
-                dbConn.Close();
             }
             catch (Exception ex)
             {
                 ErrorLogging.SendErrorToText(ex);
                 throw ex;
+            }
+            finally
+            {
+                dbConn.Close();
             }
         }
 
@@ -214,12 +237,15 @@ namespace ExcelAppOpenXML
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.ExecuteNonQuery();
                 }
-                dbConn.Close();
             }
             catch (Exception ex)
             {
                 ErrorLogging.SendErrorToText(ex);
                 throw ex;
+            }
+            finally
+            {
+                dbConn.Close();
             }
         }
 
