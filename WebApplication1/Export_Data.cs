@@ -30,9 +30,9 @@ namespace ExcelAppOpenXML
 
                 using (SpreadsheetDocument spreadSheet = SpreadsheetDocument.Open(filePath, true))
                 {
-                    WorksheetPart worksheetPart1 = GetWorksheetPartByName(spreadSheet, "Database & Connectivity");
-                    WorksheetPart worksheetPart2 = GetWorksheetPartByName(spreadSheet, "Power Systems");
-                    WorksheetPart worksheetPart3 = GetWorksheetPartByName(spreadSheet, "Z Systems");
+                    WorksheetPart worksheetPart1 = GetWorksheetPartByName(spreadSheet, "Application Modernization");
+                    WorksheetPart worksheetPart2 = GetWorksheetPartByName(spreadSheet, "Data Modernization");
+                    WorksheetPart worksheetPart3 = GetWorksheetPartByName(spreadSheet, "Infrastructure Modernization");
 
                     #region Populate & Merge
                     for (int i = 0; i < dt.Rows.Count; i++)
@@ -269,7 +269,7 @@ namespace ExcelAppOpenXML
                     {
                         double max_width = 1.5f;
                         string longest_string;
-                        if (col == 0) { longest_string = "-Database & Connectivity--"; }
+                        if (col == 0) { longest_string = "-Infrastructure Modernization--"; }
                         else if (col == 6 || col == 13) { longest_string = ""; }
                         else if (col >= 4 && col <= 11) { longest_string = "----Count----"; }
                         else if (col == 12) { longest_string = "----(unassigned)----"; }
@@ -551,9 +551,9 @@ namespace ExcelAppOpenXML
         {
             switch (i)
             {
-                case 1: case 2: case 3: case 4: return "'Database & Connectivity'";
-                case 10: case 11: case 12: case 13: return "'Power Systems'";
-                default: return "'Z Systems'";
+                case 1: case 2: case 3: case 4: return "'Application Modernization'";
+                case 10: case 11: case 12: case 13: return "'Data Modernization'";
+                default: return "'Infrastructure Modernization'";
             }
         }
 
