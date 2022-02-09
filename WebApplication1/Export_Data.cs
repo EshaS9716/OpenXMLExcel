@@ -103,6 +103,10 @@ namespace ExcelAppOpenXML
                     Worksheet worksheet = worksheetPart1.Worksheet;
 
                     #region Populate
+
+                    InsertTextExistingExcel(spreadSheet, worksheetPart1, 4, 2, DateTime.Now.ToString("g"), true);
+                    StylesSheet5.AddBold(spreadSheet, GetSpreadsheetCell(worksheet, ColumnLetter(3), 2), 4, false, true);
+
                     for (i = 0; i <= dt.Rows.Count - 1; i++)
                     {
                         for (j = 0; j <= dt.Columns.Count - 2; j += 2)
@@ -255,7 +259,7 @@ namespace ExcelAppOpenXML
                             cell.DataType = CellValues.String;
                             cell.CellValue = new CellValue(dsrow[col].ToString());
                             newRow.AppendChild(cell);
-                            StylesSheet5.AddBold(workbook, cell, column + 1, buChanged);
+                            StylesSheet5.AddBold(workbook, cell, column + 1, buChanged, false);
                             column++;
                         }
                         sheetData.AppendChild(newRow);

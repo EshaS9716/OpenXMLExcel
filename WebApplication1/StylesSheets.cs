@@ -165,20 +165,20 @@ namespace ExcelAppOpenXML
 
     public static class StylesSheet5
     {
-        public static void AddBold(SpreadsheetDocument document, Cell c, int column, bool buChanged)
+        public static void AddBold(SpreadsheetDocument document, Cell c, int column, bool buChanged, bool isPage1Date)
         {
             if (IsBkgColor(column))
             {
-                Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, column);
+                Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, column, isPage1Date);
                 Fills fi = AddFills(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills, column);
-                Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, buChanged);
+                Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, buChanged, isPage1Date);
                 AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fills, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders);
                 c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
             }
             else
             {
-                Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, column);
-                Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, buChanged);
+                Fonts fs = AddFont(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, column, isPage1Date);
+                Borders bs = AddBorders(document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders, buChanged, isPage1Date);
                 AddCellFormat(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Fonts, document.WorkbookPart.WorkbookStylesPart.Stylesheet.Borders);
                 c.StyleIndex = (UInt32)(document.WorkbookPart.WorkbookStylesPart.Stylesheet.CellFormats.Elements<CellFormat>().Count() - 1);
             }
@@ -194,7 +194,7 @@ namespace ExcelAppOpenXML
             }
         }
 
-        static Fonts AddFont(Fonts fs, int col)
+        static Fonts AddFont(Fonts fs, int col, bool isPage1Date)
         {
             Font font2 = new Font();
             Bold bold1 = new Bold();
@@ -226,7 +226,10 @@ namespace ExcelAppOpenXML
             {
                 color.Rgb = "003366";
                 fontSize2.Val = 11D;
-                font2.Append(underline);
+                if (!isPage1Date)
+                {
+                    font2.Append(underline);
+                }
                 font2.Append(italic);
             }
             else if (IsBkgColor(col))
@@ -273,14 +276,17 @@ namespace ExcelAppOpenXML
             return fills;
         }
 
-        static Borders AddBorders(Borders borders, bool buChanged)
+        static Borders AddBorders(Borders borders, bool buChanged, bool isPage1Date)
         {
             Border border = new Border();
 
-            RightBorder rightBorder = new RightBorder() { Style = BorderStyleValues.Thin };
-            Color color1 = new Color() { Indexed = (UInt32Value)64U };
-            rightBorder.Append(color1);
-            border.Append(rightBorder);
+            if (!isPage1Date)
+            {
+                RightBorder rightBorder = new RightBorder() { Style = BorderStyleValues.Thin };
+                Color color1 = new Color() { Indexed = (UInt32Value)64U };
+                rightBorder.Append(color1);
+                border.Append(rightBorder);
+            }
 
             if (buChanged)
             {
