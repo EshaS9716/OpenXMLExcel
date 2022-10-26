@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Net.Mail;
+using System.Net.Mime;
+using System.Web;
 using System.Web.UI;
 using Ionic.Zip;
 
@@ -11,9 +14,13 @@ namespace ExcelAppOpenXML
         public static string DesPath { get; set; }
         public static string TierDesPath { get; set; }
         public static bool WasImportSuccessful { get; set; }
+        public static string Email { get; set; }
 
         protected void Page_Load(object sender, EventArgs e)
         {
+            var queryString = HttpContext.Current.Request.QueryString.GetValues(0);
+            Email = queryString[0];
+
             SourcePath = Server.MapPath("~/Template/MyDataTemplate.xlsx");
             DesPath = Server.MapPath("~/Template/Rocket Product Hierarchy.xlsx");
 
@@ -39,17 +46,12 @@ namespace ExcelAppOpenXML
 
             using (ZipFile zip = new ZipFile())
             {
-                zip.AlternateEncodingUsage = ZipOption.AsNecessary;
-                zip.AddFile(DesPath, ""); 
-                zip.AddFile(TierDesPath, "");
-
-                Response.Clear();
-                Response.BufferOutput = false;
-                string zipName = String.Format("Hierarchy Data ({0}).zip", Export_Data.date);
-                Response.ContentType = "application/zip";
-                Response.AddHeader("content-disposition", "attachment; filename=" + zipName);
-                zip.Save(Response.OutputStream);
-                Response.End();
+                ContentType ct1 = new ContentType("application/vnd.ms-excel");
+                ContentType ct2 = new ContentType("application/vnd.ms-excel");
+                
+                Attachment attachment1 = new Attachment(DesPath, ct1);
+                Attachment attachment2 = new Attachment(TierDesPath, ct2);
+                SendAsEmail.SendEmail(Email, attachment1, attachment2);
             }
         }
     }
