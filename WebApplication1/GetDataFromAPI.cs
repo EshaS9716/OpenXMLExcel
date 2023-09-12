@@ -15,6 +15,7 @@ namespace ExcelAppOpenXML
         public static DataTable dataTable2 = new DataTable();
         public static DataTable dataTable3 = new DataTable();
         public static DataTable dataTable4 = new DataTable();
+        public static DataTable dataTable5 = new DataTable();
 
         public static MySql.Data.MySqlClient.MySqlConnection dbConn = new MySql.Data.MySqlClient.MySqlConnection("user id=esahu;server=walstgpimcore01;database=rocket_hierarchy_stage;password=Dev*eSha");
         public static string baseUrl = "http://walstgpim01.rocketsoftware.com/api/productmasterlisting";
@@ -149,10 +150,12 @@ namespace ExcelAppOpenXML
             var hierarchy = "select * from rocket_hierarchy_excel";
             var pSummary = "select * from product_hierarchy";
             var tSummary = "select * from tier_hierarchy";
+            var sSummary = "select * from sku_hierarchy";
             var sp_Page1 = "Page1";
             var sp_Page2 = "Page2";
             var sp_Product = "ProductSummary";
             var sp_Tier = "TierSummary";
+            var sp_SKU = "SKUSummary";
 
             try
             {
@@ -174,6 +177,11 @@ namespace ExcelAppOpenXML
                     cmd.ExecuteNonQuery();
                 }
                 using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_Tier, dbConn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.ExecuteNonQuery();
+                }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sp_SKU, dbConn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.ExecuteNonQuery();
@@ -213,6 +221,16 @@ namespace ExcelAppOpenXML
                         dataTable4 = new DataTable();
                     }
                     dataTable4.Load(mdr);
+                }
+                using (MySql.Data.MySqlClient.MySqlCommand cmd = new MySql.Data.MySqlClient.MySqlCommand(sSummary, dbConn))
+                {
+                    cmd.CommandTimeout = 99999;
+                    var mdr = cmd.ExecuteReader();
+                    if (dataTable5 == null)
+                    {
+                        dataTable5 = new DataTable();
+                    }
+                    dataTable5.Load(mdr);
                 }
             }
             catch (Exception ex)
@@ -256,6 +274,7 @@ namespace ExcelAppOpenXML
             dataTable2 = null;
             dataTable3 = null;
             dataTable4 = null;
+            dataTable5 = null;
         }
     }
 }

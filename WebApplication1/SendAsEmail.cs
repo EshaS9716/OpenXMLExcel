@@ -5,7 +5,7 @@ namespace ExcelAppOpenXML
 {
     public class SendAsEmail
     {
-        public static void SendEmail(string emailAddress, Attachment attachment1, Attachment attachment2)
+        public static void SendEmail(string emailAddress, Attachment attachment1, Attachment attachment2, Attachment attachment3)
         {
             try
             {
@@ -23,10 +23,11 @@ namespace ExcelAppOpenXML
 
                 mail.Body = textBody;
 
-                if (attachment1 != null && attachment2 != null)
+                if (attachment1 != null && attachment2 != null && attachment3 != null)
                 {
                     mail.Attachments.Add(attachment1);
                     mail.Attachments.Add(attachment2);
+                    mail.Attachments.Add(attachment3);
                 }
 
                 SmtpServer.Host = "smtp.rocketsoftware.com";
